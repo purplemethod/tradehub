@@ -20,6 +20,7 @@ import UserContext from "./context/UserContext";
 
 import { getAuth, signOut } from "firebase/auth";
 import { useNavigate } from "react-router";
+import { useBasket } from "./context/useBasket";
 
 const navigation = [
   {
@@ -33,6 +34,7 @@ const navigation = [
 const NavBar = () => {
   const { user, setUser } = useContext(UserContext)!;
   const navigate = useNavigate();
+  const { basketCount } = useBasket();
 
   const handleLogout = async () => {
     const auth = getAuth();
@@ -105,9 +107,9 @@ const NavBar = () => {
                   <span className="absolute -inset-1.5" />
                   <span className="sr-only">View notifications</span>
                   <ShoppingCartIcon aria-hidden="true" className="size-6" />
-                  {parseInt("2") > 0 && (
+                  {basketCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-[#A78BFA] rounded-full px-2 text-xs text-white">
-                      2
+                      {basketCount}
                     </span>
                   )}
                 </button>
