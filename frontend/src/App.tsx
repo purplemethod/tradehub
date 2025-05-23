@@ -99,6 +99,14 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
+            path="/profile"
+            element={
+              <AuthGuard>
+                <EditProfilePage />
+              </AuthGuard>
+            }
+          />
+          <Route
             path="/edit-profile"
             element={
               <AuthGuard>
