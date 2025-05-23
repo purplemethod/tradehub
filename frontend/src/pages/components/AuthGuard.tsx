@@ -12,7 +12,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
   useEffect(() => {
     if (!userLoading && !user) {
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   }, [user, userLoading, navigate]);
 

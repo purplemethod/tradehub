@@ -319,7 +319,14 @@
       "submitQuestionFailed": "Failed to submit question",
       "submitAnswerFailed": "Failed to submit answer",
       "ownerEmailNotFound": "Unable to submit question: Product owner information not found",
-      "deleteQuestionFailed": "Failed to delete question"
+      "deleteQuestionFailed": "Failed to delete question",
+      "outOfStock": "Product is out of stock",
+      "invalidYoutubeUrl": "Invalid YouTube URL",
+      "productNotFound": "Product not found",
+      "removeImageFailed": "Failed to remove image",
+      "updateFailed": "Failed to update product",
+      "fetchError": "Error fetching products",
+      "notAuthenticated": "You must be logged in to perform this action"
     },
     "deleteQuestion": "Delete Question",
     "deleteQuestionConfirmation": "Are you sure you want to delete this question?",
@@ -327,7 +334,16 @@
     "uploadingImages": "Uploading images",
     "removeFromFavorites": "Remove from Favorites",
     "favoriteRemoved": "Product removed from favorites",
-    "favoriteRemoveError": "Failed to remove product from favorites"
+    "favoriteRemoveError": "Failed to remove product from favorites",
+    "notifications": {
+      "createSuccess": "Product created successfully",
+      "createError": "Error creating product",
+      "updateSuccess": "Product updated successfully",
+      "updateError": "Error updating product",
+      "deleteSuccess": "Product deleted successfully",
+      "deleteError": "Error deleting product",
+      "fetchError": "Error fetching products"
+    }
   },
   "cart": {
     "title": "Shopping Cart",

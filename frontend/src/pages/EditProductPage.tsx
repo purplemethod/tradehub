@@ -380,11 +380,11 @@ const EditProductPage: React.FC = () => {
       // Reload the products context
       await refreshProducts();
 
-      showNotification(t("products.saveSuccess"), "success");
-      navigate("/my-products");
+      showNotification(t("products.notifications.updateSuccess"), "success");
+      navigate("/my-products", { replace: true });
     } catch (error) {
       console.error("Error updating product:", error);
-      showNotification(t("products.saveError"), "error");
+      showNotification(t("products.notifications.updateError"), "error");
     } finally {
       setIsSaving(false);
       setUploadProgress(0);

@@ -486,12 +486,12 @@ const NewProductPage: React.FC = () => {
       // Save Product
       await setDoc(productRef, productData);
 
-      showNotification(t("products.saveSuccess"), "success");
+      showNotification(t("products.notifications.createSuccess"), "success");
       await refreshProducts();
-      navigate("/my-products");
+      navigate("/my-products", { replace: true });
     } catch (error) {
-      console.error("Falha ao criar produto:", error);
-      showNotification(t("products.saveError"), "error");
+      console.error("Error creating product:", error);
+      showNotification(t("products.notifications.createError"), "error");
     } finally {
       setLoading(false);
     }

@@ -60,7 +60,7 @@ const LoginPage: React.FC = () => {
       );
       setUser(userCredential.user);
       showNotification(t("auth.notifications.loginSuccess"), "success");
-      navigate("/home");
+      navigate("/home", { replace: true });
     } catch {
       showNotification(t("auth.notifications.loginError"), "error");
     }
@@ -72,7 +72,7 @@ const LoginPage: React.FC = () => {
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
       showNotification(t("auth.notifications.loginSuccess"), "success");
-      navigate("/home");
+      navigate("/home", { replace: true });
     } catch {
       showNotification(t("auth.notifications.loginError"), "error");
     }

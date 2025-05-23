@@ -272,7 +272,7 @@ const NavBar: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login");
+      navigate("/login", { replace: true });
     } catch (error) {
       console.error("Error logging out:", error);
     }

@@ -29,6 +29,11 @@ const EditProfilePage: React.FC = () => {
   });
 
   useEffect(() => {
+    if (!context?.user) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
     const fetchUserProfile = async () => {
       // Wait for user context to finish loading
       if (!context) {
@@ -74,7 +79,7 @@ const EditProfilePage: React.FC = () => {
     };
 
     fetchUserProfile();
-  }, [context, navigate]);
+  }, [context?.user, navigate]);
 
   // Show loading state while user context is loading
   if (!context || context.userLoading) {

@@ -92,7 +92,7 @@ const MyProductsPage: React.FC = () => {
     }
     // Only redirect if user context is done loading and there's no user
     if (!userLoading && !user) {
-      navigate("/login");
+      navigate("/login", { replace: true });
       return;
     }
     if (productsLoading) {
