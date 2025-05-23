@@ -160,7 +160,13 @@
     "myProducts": "Meus Produtos",
     "listed": "Produtos Anunciados",
     "sell": "Vender Produto",
-    "favorites": "Meus Produtos Favoritos",
+    "favorites": {
+      "add": "Adicionar aos Favoritos",
+      "remove": "Remover dos Favoritos",
+      "added": "Produto adicionado aos favoritos",
+      "removed": "Produto removido dos favoritos",
+      "error": "Falha ao atualizar favoritos"
+    },
     "newProduct": {
       "title": "Adicionar Novo Produto",
       "name": "Nome do Produto",

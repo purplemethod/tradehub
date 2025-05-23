@@ -161,7 +161,13 @@
     "myProducts": "My Products",
     "listed": "Listed Products",
     "sell": "Sell Product",
-    "favorites": "My Favorite Products",
+    "favorites": {
+      "add": "Add to Favorites",
+      "remove": "Remove from Favorites",
+      "added": "Product added to favorites",
+      "removed": "Product removed from favorites",
+      "error": "Failed to update favorites"
+    },
     "newProduct": {
       "title": "Add New Product",
       "name": "Product Name",
