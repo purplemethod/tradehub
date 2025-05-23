@@ -1,5 +1,3 @@
-// src/types.ts
-
 import { Timestamp } from "firebase/firestore";
 
 export interface Product {
@@ -31,18 +29,6 @@ export interface ImageMetadata {
   type: "image" | "youtube";
 }
 
-export interface UserProfile {
-  displayName: string;
-  email: string;
-  photoURL: string;
-  phoneNumber?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  zipCode?: string;
-}
-
 export interface ProductQuestion {
   id: string;
   userId: string;
@@ -55,3 +41,20 @@ export interface ProductQuestion {
   answeredAt?: Date;
   productOwnerEmail: string;
 }
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  displayName: string;
+  email: string;
+  photoURL?: string;
+  phoneNumber?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zipCode?: string;
+  bio?: string;
+  createdAt: Date;
+  updatedAt: Date;
+} 

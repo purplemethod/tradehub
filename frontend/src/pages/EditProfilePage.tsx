@@ -13,6 +13,8 @@ const EditProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile>({
+    id: "",
+    name: "",
     displayName: "",
     email: "",
     photoURL: "",
@@ -22,6 +24,8 @@ const EditProfilePage: React.FC = () => {
     state: "",
     country: "",
     zipCode: "",
+    createdAt: new Date(),
+    updatedAt: new Date()
   });
 
   useEffect(() => {
@@ -48,6 +52,8 @@ const EditProfilePage: React.FC = () => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setProfile({
+            id: user!.uid,
+            name: userData.name || "",
             displayName: userData.displayName || "",
             email: userData.email || "",
             photoURL: userData.photoURL || "",
@@ -57,6 +63,8 @@ const EditProfilePage: React.FC = () => {
             state: userData.state || "",
             country: userData.country || "",
             zipCode: userData.zipCode || "",
+            createdAt: userData.createdAt?.toDate() || new Date(),
+            updatedAt: userData.updatedAt?.toDate() || new Date()
           });
         }
       } catch (err) {
@@ -108,7 +116,7 @@ const EditProfilePage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setProfile((prev) => ({
+    setProfile((prev: UserProfile) => ({
       ...prev,
       [name]: value,
     }));
