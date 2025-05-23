@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { BasketContext } from "./BasketContextDefinition";
+import { BasketContext } from "./BasketContext";
 
 export const useBasket = () => {
   const context = useContext(BasketContext);

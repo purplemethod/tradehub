@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -12,8 +11,28 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-export const provider = new GoogleAuthProvider();
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// Initialize Auth with custom settings
 export const auth = getAuth(app);
-export const storage = getStorage(app);
+auth.useDeviceLanguage();
+auth.settings.appVerificationDisabledForTesting = false;
+
+// Configure Google Auth Provider
+export const provider = new GoogleAuthProvider();
+provider.setCustomParameters({
+  prompt: 'select_account',
+  // Add any additional OAuth scopes if needed
+  // scopes: ['https://www.googleapis.com/auth/userinfo.email']
+});
+
+// Initialize Firestore
 export const firestoreDB = getFirestore(app);
+
+// Add error handling for auth popup
+window.addEventListener('error', (event) => {
+  if (event.message.includes('Cross-Origin-Opener-Policy')) {
+    console.warn('COOP policy warning - this is expected in development');
+  }
+});

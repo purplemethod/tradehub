@@ -1,0 +1,107 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Allow read access to all collections
+    match /{document=**} {
+      allow read: if true;
+    }
+    
+    // Products collection rules
+    match /products/{productId} {
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Products questions collection rules
+    match /products-questions/{questionId} {
+      allow create: if isAuthenticated() && 
+        request.resource.data.userEmail == request.auth.token.email;
+      allow read: if true;
+      allow update: if isAuthenticated() && 
+        (resource.data.userEmail == request.auth.token.email || 
+         resource.data.productOwnerEmail == request.auth.token.email);
+      allow delete: if isAuthenticated() && 
+        resource.data.productOwnerEmail == request.auth.token.email;
+    }
+    
+    // Products images collection rules
+    match /products-images/{imageId} {
+      allow create, update, delete: if isAuthenticated();
+      
+      // Allow write access to chunks subcollection
+      match /chunks/{chunkId} {
+        allow create, update, delete: if isAuthenticated();
+      }
+    }
+    
+    // Products images thumbnails collection rules
+    match /products-images-thumb/{thumbnailId} {
+      allow create, update, delete: if isAuthenticated();
+    }
+    
+    // Products images metadata collection rules
+    match /products-images-metadata/{metadataId} {
+      allow create, update, delete: if isAuthenticated();
+    }
+    
+    // Users collection rules
+    match /users/{userId} {
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update, delete: if isOwner(userId);
+    }
+
+    // Orders collection rules
+    match /orders/{orderId} {
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.sellerId == request.auth.uid);
+      allow update: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.sellerId == request.auth.uid);
+    }
+
+    // PIX payments collection rules
+    match /pixPayments/{paymentId} {
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.sellerId == request.auth.uid);
+      allow update: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.sellerId == request.auth.uid);
+    }
+
+    // Favorites collection rules
+    match /favorites/{favoriteId} {
+      // Allow read if the user is authenticated and owns the favorite
+      allow read: if request.auth != null && 
+                  request.auth.uid == resource.data.userId;
+      
+      // Allow create if the user is authenticated and sets themselves as the owner
+      allow create: if request.auth != null && 
+                   request.auth.uid == request.resource.data.userId;
+      
+      // Allow delete if the user is authenticated and owns the favorite
+      allow delete: if request.auth != null && 
+                   request.auth.uid == resource.data.userId;
+      
+      // No updates allowed - users should delete and recreate if needed
+      allow update: if false;
+    }
+  }
+} 
