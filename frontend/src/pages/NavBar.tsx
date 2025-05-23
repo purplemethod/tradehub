@@ -6,7 +6,6 @@ import {
   MenuButton,
   MenuItem,
   MenuItems,
-  MenuSeparator,
 } from "@headlessui/react";
 
 import {
@@ -125,7 +124,8 @@ const BasketDrawer: React.FC<BasketDrawerProps> = ({
                             src={(() => {
                               // First try to find a valid image thumbnail imageMetadataRef.thumbnailDataURL
                               const imageThumbnail =
-                                item.product.imageMetadataRef?.[0]?.thumbnailDataURL || null;
+                                item.product.imageMetadataRef?.[0]
+                                  ?.thumbnailDataURL || null;
 
                               if (imageThumbnail) {
                                 return imageThumbnail;
@@ -134,7 +134,8 @@ const BasketDrawer: React.FC<BasketDrawerProps> = ({
                               // If no image thumbnail, try to find a video thumbnail
                               const videoThumbnail =
                                 item.product.imageMetadataRef?.find(
-                                  (img) => img.type === "youtube" && img.videoUrl
+                                  (img) =>
+                                    img.type === "youtube" && img.videoUrl
                                 )?.videoUrl;
 
                               if (videoThumbnail) {
@@ -329,7 +330,6 @@ const NavBar: React.FC = () => {
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
                 <div className="flex items-center space-x-4">
-                  <LanguageSwitcher />
                   <button
                     type="button"
                     className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
@@ -380,51 +380,51 @@ const NavBar: React.FC = () => {
                     className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
                   >
                     <MenuItem>
-                      <a
-                        href="/edit-profile"
+                      <Link
+                        to="/profile"
                         className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                       >
-                        {user?.displayName || user?.email || t("common.guest")}
-                      </a>
+                        {t("profile.title")}
+                      </Link>
                     </MenuItem>
-                    {user?.displayName && (
-                      <MenuSeparator className="border-t border-gray-200 my-1" />
-                    )}
-                    {!user?.displayName && user?.email && (
-                      <MenuSeparator className="border-t border-gray-200 my-1" />
-                    )}
                     <MenuItem>
-                      <a
-                        href="/my-products"
+                      <Link
+                        to="/my-products"
                         className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                       >
                         {t("products.myProducts")}
-                      </a>
+                      </Link>
                     </MenuItem>
                     <MenuItem>
-                      <a
-                        href="/my-favorites"
+                      <Link
+                        to="/my-favorites"
                         className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                       >
-                        {t("products.favorites")}
-                      </a>
+                        {t("products.myFavorites")}
+                      </Link>
                     </MenuItem>
                     <MenuItem>
-                      <a
-                        href="/my-purchases"
+                      <Link
+                        to="/my-purchases"
                         className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                       >
                         {t("orders.myPurchases")}
-                      </a>
+                      </Link>
                     </MenuItem>
+                    <div className="border-t border-gray-200 my-1" />
                     <MenuItem>
-                      <a
-                        href="#"
+                      <div className="px-4 py-2">
+                        <LanguageSwitcher />
+                      </div>
+                    </MenuItem>
+                    <div className="border-t border-gray-200 my-1" />
+                    <MenuItem>
+                      <button
                         onClick={handleLogout}
-                        className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                       >
                         {t("auth.logout")}
-                      </a>
+                      </button>
                     </MenuItem>
                   </MenuItems>
                 </Menu>

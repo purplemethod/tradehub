@@ -7,8 +7,8 @@ import { auth } from "./utils/FirebaseConfig";
 import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import { useNotification } from "./context/NotificationContext";
 import { GoogleAuthProvider } from "firebase/auth";
-import LanguageSwitcher from "./components/LanguageSwitcher";
 import ForgotPasswordModal from "./components/ForgotPasswordModal";
+import LoginLanguageSwitcher from "./components/LoginLanguageSwitcher";
 
 interface FormErrors {
   email?: string;
@@ -82,7 +82,7 @@ const LoginPage: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <header className="bg-white shadow">
         <div className="container mx-auto px-4 py-4 flex justify-end">
-          <LanguageSwitcher />
+          <LoginLanguageSwitcher />
         </div>
       </header>
       <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

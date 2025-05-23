@@ -161,6 +161,7 @@
     "myProducts": "My Products",
     "listed": "Listed Products",
     "sell": "Sell Product",
+    "myFavorites": "My Favorites",
     "favorites": {
       "add": "Add to Favorites",
       "remove": "Remove from Favorites",
