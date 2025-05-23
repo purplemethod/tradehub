@@ -25,3 +25,6 @@ dist-ssr
 
 .env
 .env.*
+
+.DS_*
+.DS_Store
