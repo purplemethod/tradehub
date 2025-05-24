@@ -24,8 +24,12 @@ export const auth = getAuth(app);
 auth.useDeviceLanguage();
 auth.settings.appVerificationDisabledForTesting = false;
 
-// Set persistence to local
-setPersistence(auth, browserLocalPersistence);
+// Set persistence to LOCAL
+setPersistence(auth, browserLocalPersistence)
+  .catch((error) => {
+    console.error("Auth persistence error:", error);
+  });
+
 
 // Configure Google Auth Provider
 export const provider = new GoogleAuthProvider();
