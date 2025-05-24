@@ -82,7 +82,7 @@ const CheckoutPage: React.FC = () => {
       if (!user) return;
 
       try {
-        const userRef = doc(firestoreDB, "users", user.uid);
+        const userRef = doc(firestoreDB, "users", user.id);
         const userDoc = await getDoc(userRef);
 
         if (userDoc.exists()) {
@@ -241,7 +241,7 @@ const CheckoutPage: React.FC = () => {
       showNotification(t("checkout.notifications.processing"), "info");
 
       // Update user data in Firestore with the latest information
-      const userRef = doc(firestoreDB, "users", user.uid);
+      const userRef = doc(firestoreDB, "users", user.id);
       await updateDoc(userRef, {
         phoneNumber: formData.phoneNumber,
         address: formData.address,
@@ -272,7 +272,7 @@ const CheckoutPage: React.FC = () => {
       // Generate PIX payment
       const pixData = await generatePixPayment({
         orderId: "", // Will be set after order creation
-        userId: user.uid,
+        userId: user.id,
         sellerId: basketItems[0]?.product.owner || "",
         amount: total,
         transactionId: `PIX-${Date.now()}`,
@@ -436,7 +436,7 @@ const CheckoutPage: React.FC = () => {
 
       // Create order in Firestore
       const orderData = {
-        userId: user.uid,
+        userId: user.id,
         items: basketItems.map((item) => ({
           productId: item.product.id,
           name: item.product.name,
@@ -482,7 +482,7 @@ const CheckoutPage: React.FC = () => {
       const pixData: PixPaymentData = {
         id: orderRef.id, // Use order ID as payment ID
         orderId: orderRef.id,
-        userId: user.uid,
+        userId: user.id,
         sellerId: data.sellerId,
         pixKey,
         pixKeyType: pixKeyType as "cpf" | "email" | "phoneNumber" | "random",
@@ -1013,7 +1013,7 @@ const CheckoutPage: React.FC = () => {
                         onClick={() =>
                           generatePixPayment({
                             orderId: pixPaymentData.orderId,
-                            userId: user!.uid,
+                            userId: user!.id,
                             sellerId: basketItems[0]?.product.owner || "",
                             amount: total,
                             transactionId: pixPaymentData.transactionId!,

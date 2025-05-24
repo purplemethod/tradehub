@@ -4,7 +4,7 @@ import { firestoreDB } from "./utils/FirebaseConfig";
 import UserContext from "./context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { NotificationPreferences } from "./components/NotificationPreferences";
-import type { UserProfile } from "../types";
+import { UserRole, type UserProfile } from "../types";
 import { useTranslation } from "react-i18next";
 
 const EditProfilePage: React.FC = () => {
@@ -26,8 +26,9 @@ const EditProfilePage: React.FC = () => {
     state: "",
     country: "",
     zipCode: "",
+    role: UserRole.BUYER,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   });
 
   useEffect(() => {
@@ -53,11 +54,11 @@ const EditProfilePage: React.FC = () => {
       }
 
       try {
-        const userDoc = await getDoc(doc(firestoreDB, "users", user!.uid));
+        const userDoc = await getDoc(doc(firestoreDB, "users", user!.id));
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setProfile({
-            id: user!.uid,
+            id: user!.id,
             name: userData.name || "",
             displayName: userData.displayName || "",
             email: userData.email || "",
@@ -68,8 +69,9 @@ const EditProfilePage: React.FC = () => {
             state: userData.state || "",
             country: userData.country || "",
             zipCode: userData.zipCode || "",
+            role: UserRole.BUYER,
             createdAt: userData.createdAt?.toDate() || new Date(),
-            updatedAt: userData.updatedAt?.toDate() || new Date()
+            updatedAt: userData.updatedAt?.toDate() || new Date(),
           });
         }
       } catch (err) {
@@ -98,7 +100,7 @@ const EditProfilePage: React.FC = () => {
     setSuccess(null);
 
     try {
-      const userRef = doc(firestoreDB, "users", context.user.uid);
+      const userRef = doc(firestoreDB, "users", context.user.id);
       await updateDoc(userRef, {
         displayName: profile.displayName,
         phoneNumber: profile.phoneNumber,
@@ -128,7 +130,9 @@ const EditProfilePage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">{t("profile.management.editProfile")}</h1>
+      <h1 className="text-2xl font-bold mb-6">
+        {t("profile.management.editProfile")}
+      </h1>
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">

@@ -16,6 +16,8 @@ import { useTranslation } from "react-i18next";
 import { useProducts } from "./context/ProductContextDefinition";
 import ImageModal from "./components/ImageModal";
 import type { Product } from "../types";
+import { canManageProducts } from "../utils/permissions";
+import { UserRole } from "../types";
 
 const MyProductsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -101,7 +103,7 @@ const MyProductsPage: React.FC = () => {
     if (!productsLoading && products && products.length > 0) {
       setLoading(false);
       // set my own products to show based on the ID.
-      setMyProducts(products.filter((product) => product.userId === user?.uid));
+      setMyProducts(products.filter((product) => product.userId === user?.id));
     }
     if (error) {
       console.error("Error fetching products:", error);
@@ -180,7 +182,7 @@ const MyProductsPage: React.FC = () => {
       const questionsRef = collection(firestoreDB, "products-questions");
       const q = query(questionsRef, where("productId", "==", productId));
       const questionsSnapshot = await getDocs(q);
-      
+
       // Delete all questions
       const questionDeletePromises = questionsSnapshot.docs.map((questionDoc) =>
         deleteDoc(questionDoc.ref)
@@ -265,12 +267,14 @@ const MyProductsPage: React.FC = () => {
         <h1 className="text-2xl font-bold mb-6 text-gray-900">
           {t("products.myProducts")}
         </h1>
-        <button
-          onClick={handleCreate}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          {t("products.addNew")}
-        </button>
+        {canManageProducts(userContext?.user?.role || UserRole.BUYER) && (
+          <button
+            onClick={handleCreate}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            {t("products.addNew")}
+          </button>
+        )}
       </div>
 
       {myProducts.length === 0 ? (
@@ -301,7 +305,9 @@ const MyProductsPage: React.FC = () => {
                   <img
                     src={
                       images[productImageIndices[product.id] || 0]
-                        .thumbnailDataURL ?? selectedImageThumbnail ?? undefined
+                        .thumbnailDataURL ??
+                      selectedImageThumbnail ??
+                      undefined
                     }
                     alt={product.name}
                     className="w-full h-full object-cover"

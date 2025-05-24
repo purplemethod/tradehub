@@ -70,7 +70,8 @@
       "userNotFound": "No account found with this email address.",
       "invalidEmail": "Please enter a valid email address.",
       "mustLogin": "You must be logged in to access this page."
-    }
+    },
+    "permissionDenied": "You don't have permission to access this page"
   },
   "checkout": {
     "pixDescription": "Pay instantly with PIX - Brazil's instant payment system",

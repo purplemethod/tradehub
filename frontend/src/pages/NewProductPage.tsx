@@ -460,7 +460,7 @@ const NewProductPage: React.FC = () => {
             dimensions: item.fileInfo?.dimensions || null,
             createdAt: Timestamp.now(),
             productId: productId,
-            userId: user.uid,
+            userId: user.id,
           });
         }
       }
@@ -468,7 +468,7 @@ const NewProductPage: React.FC = () => {
       // Create the product with the metadata reference
       const productData = {
         ...formData,
-        userId: user.uid,
+        userId: user.id,
         owner: user.email,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),

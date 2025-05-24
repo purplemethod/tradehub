@@ -4,15 +4,15 @@ import React, {
   useEffect,
   type ReactNode,
 } from "react";
-import type { User } from "firebase/auth";
 import { auth, firestoreDB } from "../utils/FirebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { UserRole, type UserProfile } from "../../types";
 
 interface UserContextType {
-  user: User | null;
+  user: UserProfile | null;
   userLoading: boolean;
-  setUser: (user: User | null) => void;
+  setUser: (user: UserProfile | null) => void;
   logout: () => Promise<void>;
 }
 
@@ -21,7 +21,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [userLoading, setUserLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         if (!isMounted) return;
 
         if (user) {
-          setUser(user);
+          setUser({...user, id: user.uid} as unknown as UserProfile);
           try {
             // Create or update user document in Firestore
             const userRef = doc(firestoreDB, "users", user.uid);
@@ -41,9 +41,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             if (!userDoc.exists()) {
               // Create new user document
               await setDoc(userRef, {
+                id: user.uid,
                 email: user.email,
                 displayName: user.displayName || "",
                 photoURL: user.photoURL || "",
+                role: UserRole.BUYER,
                 createdAt: serverTimestamp(),
                 lastLogin: serverTimestamp(),
               });
@@ -100,3 +102,4 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 };
 
 export default UserContext;
+

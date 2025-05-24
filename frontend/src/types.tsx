@@ -42,6 +42,8 @@ export interface ProductQuestion {
   productOwnerEmail: string;
 }
 
+
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -54,7 +56,17 @@ export interface UserProfile {
   state?: string;
   country?: string;
   zipCode?: string;
-  bio?: string;
+  role: UserRole;
   createdAt: Date;
   updatedAt: Date;
+} 
+
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  SELLER = 'SELLER',
+  BUYER = 'BUYER'
+}
+
+export interface UserWithPrivateData extends UserProfile {
+  isEmailPrivate: boolean;
 } 

@@ -38,7 +38,7 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     setFavoritesLoading(true);
-    const userId = userContext.user.uid;
+    const userId = userContext.user.id;
 
     const q = query(
       collection(firestoreDB, 'favorites'),
@@ -81,7 +81,7 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       await addDoc(collection(firestoreDB, 'favorites'), {
-        userId: userContext.user.uid,
+        userId: userContext.user.id,
         productId,
         createdAt: new Date()
       });

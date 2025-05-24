@@ -7,7 +7,6 @@ import LoginPage from "./pages/LoginPage";
 import NewProductPage from "./pages/NewProductPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import { NotificationProvider } from "./pages/context/NotificationContext";
-import UserContext from "./pages/context/UserContext";
 import { UserProvider } from "./pages/context/UserContext";
 import { ProductProvider } from "./pages/context/ProductContext";
 import { NotificationContainer } from "./pages/components/NotificationContainer";
@@ -20,22 +19,12 @@ import SellingProductPage from "./pages/SellingProductPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import { FavoritesProvider } from "./pages/context/FavoritesContext";
 import MyFavoritesPage from "./pages/MyFavoritesPage";
-
-const AuthGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, userLoading } = React.useContext(UserContext)!;
-
-  if (userLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
-    );
-  }
-
-  return user ? <>{children}</> : <Navigate to="/login" />;
-};
+import { useUserRole } from "./hooks/useUserRole";
+import AuthGuard from "./pages/components/AuthGuard";
 
 const AppContent: React.FC = () => {
+  const { isAdmin, canManageProducts } = useUserRole();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <NavBar />
@@ -45,7 +34,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/new-product"
             element={
-              <AuthGuard>
+              <AuthGuard requiredPermission={canManageProducts}>
                 <NewProductPage />
               </AuthGuard>
             }
@@ -53,7 +42,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/home"
             element={
-              <AuthGuard>
+              <AuthGuard requiredPermission={true}>
                 <SellingProductPage />
               </AuthGuard>
             }
@@ -61,7 +50,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/product/:productId"
             element={
-              <AuthGuard>
+              <AuthGuard requiredPermission={true}>
                 <ProductDetailPage />
               </AuthGuard>
             }
@@ -69,7 +58,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/edit-product/:productId"
             element={
-              <AuthGuard>
+              <AuthGuard requiredPermission={isAdmin}>
                 <EditProductPage />
               </AuthGuard>
             }
@@ -77,7 +66,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/my-products"
             element={
-              <AuthGuard>
+              <AuthGuard requiredPermission={true}>
                 <MyProductsPage />
               </AuthGuard>
             }
@@ -85,7 +74,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/my-favorites"
             element={
-              <AuthGuard>
+              <AuthGuard requiredPermission={true}>
                 <MyFavoritesPage />
               </AuthGuard>
             }
@@ -93,7 +82,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/checkout"
             element={
-              <AuthGuard>
+              <AuthGuard requiredPermission={true}>
                 <CheckoutPage />
               </AuthGuard>
             }
@@ -101,15 +90,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/profile"
             element={
-              <AuthGuard>
-                <EditProfilePage />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/edit-profile"
-            element={
-              <AuthGuard>
+              <AuthGuard requiredPermission={true}>
                 <EditProfilePage />
               </AuthGuard>
             }
@@ -117,7 +98,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/my-purchases"
             element={
-              <AuthGuard>
+              <AuthGuard requiredPermission={true}>
                 <MyPurchasesPage />
               </AuthGuard>
             }

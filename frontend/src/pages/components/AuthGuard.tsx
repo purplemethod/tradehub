@@ -1,15 +1,21 @@
 import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UserContext from "../context/UserContext";
+import { useNotification } from "../context/NotificationContext";
 
 interface AuthGuardProps {
   children: React.ReactNode;
+  requiredPermission: boolean;
 }
 
-const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
+const AuthGuard: React.FC<AuthGuardProps> = ({
+  children,
+  requiredPermission,
+}) => {
   const { user, userLoading } = useContext(UserContext)!;
   const navigate = useNavigate();
-
+  const { showNotification } = useNotification();
+  console.log("AuthGuard");
   useEffect(() => {
     if (!userLoading && !user) {
       navigate("/login", { replace: true });
@@ -25,6 +31,12 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   }
 
   if (!user) {
+    return null;
+  }
+
+  if (!requiredPermission) {
+    showNotification("This page is not available to you", "error");
+    navigate("/", { replace: true });
     return null;
   }
 

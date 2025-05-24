@@ -9,6 +9,7 @@ import { useNotification } from "./context/NotificationContext";
 import { GoogleAuthProvider } from "firebase/auth";
 import ForgotPasswordModal from "./components/ForgotPasswordModal";
 import LoginLanguageSwitcher from "./components/LoginLanguageSwitcher";
+import type { UserProfile } from "../types";
 
 interface FormErrors {
   email?: string;
@@ -59,7 +60,10 @@ const LoginPage: React.FC = () => {
         email,
         password
       );
-      setUser(userCredential.user);
+      setUser({
+        ...userCredential.user,
+        id: userCredential.user.uid,
+      } as unknown as UserProfile);
       showNotification(t("auth.notifications.loginSuccess"), "success");
       navigate("/home", { replace: true });
     } catch (error) {
@@ -73,7 +77,12 @@ const LoginPage: React.FC = () => {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       console.log(result);
-      setUser(result.user);
+      setUser(
+        {
+          ...result.user,
+          id: result.user.uid,
+        } as unknown as UserProfile
+      );
       showNotification(t("auth.notifications.loginSuccess"), "success");
       navigate("/home", { replace: true });
     } catch (error) {

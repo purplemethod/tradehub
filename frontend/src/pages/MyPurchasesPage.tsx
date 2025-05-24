@@ -55,7 +55,7 @@ const MyPurchasesPage: React.FC = () => {
         const ordersRef = collection(firestoreDB, 'orders');
         const q = query(
           ordersRef,
-          where('userId', '==', user.uid),
+          where('userId', '==', user.id),
           orderBy('createdAt', 'desc')
         );
 
