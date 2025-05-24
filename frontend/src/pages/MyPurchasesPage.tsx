@@ -4,6 +4,7 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { firestoreDB } from './utils/FirebaseConfig';
 import { useContext } from 'react';
 import UserContext from './context/UserContext';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface Order {
   id: string;
@@ -32,6 +33,11 @@ interface Order {
   status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
   createdAt: string;
   paidAt?: string;
+  pixPayment?: {
+    pixPayload: string;
+    pixKey: string;
+    expiresAt: string;
+  };
 }
 
 const MyPurchasesPage: React.FC = () => {
@@ -144,6 +150,33 @@ const MyPurchasesPage: React.FC = () => {
                 <span className="font-bold">${order.total.toFixed(2)}</span>
               </div>
             </div>
+
+            {order.status === 'pending' && order.pixPayment && (
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <h3 className="font-medium mb-4">{t('orders.pixPayment')}</h3>
+                <div className="flex flex-col items-center bg-gray-50 p-4 rounded-lg">
+                  <div className="w-48 h-48 mb-4">
+                    <QRCodeSVG
+                      value={order.pixPayment.pixPayload}
+                      size={192}
+                      level="H"
+                      includeMargin={true}
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 mb-2">
+                      {t('orders.scanQRCode')}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {t('orders.pixKey')}: {order.pixPayment.pixKey}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-2">
+                      {t('orders.expiresAt')}: {new Date(order.pixPayment.expiresAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="border-t border-gray-200 pt-4 mt-4">
               <h3 className="font-medium mb-2">{t('orders.shippingAddress')}</h3>

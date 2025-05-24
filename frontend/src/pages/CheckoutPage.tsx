@@ -4,6 +4,7 @@ import { useBasket } from "./context/useBasket";
 import UserContext from "./context/UserContext";
 import { useNotification } from "./context/NotificationContext";
 import { NotificationContainer } from "./components/NotificationContainer";
+import { ProductContext } from "./context/ProductContextDefinition";
 import {
   collection,
   addDoc,
@@ -12,6 +13,9 @@ import {
   onSnapshot,
   updateDoc,
   getDoc,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 import { firestoreDB } from "./utils/FirebaseConfig";
 import { QRCodeSVG } from "qrcode.react";
@@ -35,15 +39,6 @@ interface FormData {
   city: string;
   state: string;
   zipCode: string;
-  // Credit Card fields
-  cardNumber: string;
-  cardName: string;
-  expiryDate: string;
-  cvv: string;
-  // Bank Transfer fields
-  bankName: string;
-  accountNumber: string;
-  accountHolder: string;
   // PIX fields
   pixKey: string;
 }
@@ -53,7 +48,7 @@ interface FormErrors {
 }
 
 interface PixPaymentData {
-  id?: string;
+  id: string;
   orderId: string;
   userId: string;
   sellerId: string;
@@ -64,24 +59,22 @@ interface PixPaymentData {
   status: "pending" | "paid" | "expired" | "failed";
   createdAt: string;
   expiresAt: string;
-  transactionId?: string;
+  transactionId: string;
   errorMessage?: string;
 }
-
-type PaymentMethod = "credit_card" | "pix" | "bank_transfer";
 
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   const { basketItems, clearBasket } = useBasket();
   const { user } = useContext(UserContext)!;
   const { showNotification } = useNotification();
+  const productContext = useContext(ProductContext);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethod>("credit_card");
   const [pixPaymentData, setPixPaymentData] = useState<PixPaymentData | null>(
     null
   );
   const { t } = useTranslation();
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   // Fetch user data from Firestore
   useEffect(() => {
@@ -124,17 +117,8 @@ const CheckoutPage: React.FC = () => {
     city: "",
     state: "",
     zipCode: "",
-    // Credit Card fields
-    cardNumber: "",
-    cardName: "",
-    expiryDate: "",
-    cvv: "",
-    // Bank Transfer fields
-    bankName: "",
-    accountNumber: "",
-    accountHolder: "",
     // PIX fields
-    pixKey: "04025752964",
+    pixKey: import.meta.env.VITE_PIX_KEY || "",
   });
 
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -150,9 +134,6 @@ const CheckoutPage: React.FC = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneNumberRegex = /^\+?[\d\s-]{10,}$/;
     const zipCodeRegex = /^\d{5}-?\d{3}$/;
-    const cardNumberRegex = /^\d{16}$/;
-    const cvvRegex = /^\d{3,4}$/;
-    const expiryDateRegex = /^(0[1-9]|1[0-2])\/\d{2}$/;
 
     // Common fields validation
     if (!formData.fullName.trim()) {
@@ -193,53 +174,6 @@ const CheckoutPage: React.FC = () => {
         t("checkout.validation.zipCodeInvalid") +
         ". " +
         t("checkout.validation.zipCodeFormat");
-    }
-
-    // Payment method specific validation
-    switch (paymentMethod) {
-      case "credit_card":
-        if (!formData.cardNumber.trim()) {
-          errors.cardNumber = t("checkout.validation.cardNumberRequired");
-        } else if (
-          !cardNumberRegex.test(formData.cardNumber.replace(/\s/g, ""))
-        ) {
-          errors.cardNumber = t("checkout.validation.cardNumberInvalid");
-        }
-
-        if (!formData.cardName.trim()) {
-          errors.cardName = t("checkout.validation.cardNameRequired");
-        }
-
-        if (!formData.expiryDate.trim()) {
-          errors.expiryDate = t("checkout.validation.expiryDateRequired");
-        } else if (!expiryDateRegex.test(formData.expiryDate)) {
-          errors.expiryDate = t("checkout.validation.expiryDateInvalid");
-        }
-
-        if (!formData.cvv.trim()) {
-          errors.cvv = t("checkout.validation.cvvRequired");
-        } else if (!cvvRegex.test(formData.cvv)) {
-          errors.cvv = t("checkout.validation.cvvInvalid");
-        }
-        break;
-
-      case "bank_transfer":
-        if (!formData.bankName.trim()) {
-          errors.bankName = t("checkout.validation.bankNameRequired");
-        }
-        if (!formData.accountNumber.trim()) {
-          errors.accountNumber = t("checkout.validation.accountNumberRequired");
-        }
-        if (!formData.accountHolder.trim()) {
-          errors.accountHolder = t("checkout.validation.accountHolderRequired");
-        }
-        break;
-
-      case "pix":
-        if (!formData.pixKey.trim()) {
-          errors.pixKey = t("checkout.validation.pixKeyRequired");
-        }
-        break;
     }
 
     setFormErrors(errors);
@@ -285,8 +219,12 @@ const CheckoutPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!user) {
+      showNotification(t("checkout.notifications.loginRequired"), "error");
+      return;
+    }
+
     if (!validateForm()) {
-      // Show the first error message
       const firstError = Object.values(formErrors)[0];
       showNotification(firstError, "error");
       return;
@@ -299,149 +237,202 @@ const CheckoutPage: React.FC = () => {
 
     try {
       setIsProcessing(true);
+      setCountdown(20); // Start the countdown
       showNotification(t("checkout.notifications.processing"), "info");
 
       // Update user data in Firestore with the latest information
-      if (user) {
-        const userRef = doc(firestoreDB, "users", user.uid);
-        await updateDoc(userRef, {
-          phoneNumber: formData.phoneNumber,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode,
-        });
-      }
-
-      if (paymentMethod === "pix") {
-        await generatePixPayment();
-        return;
-      }
-
-      // Create order in Firestore for other payment methods
-      const orderData = {
-        userId: user?.uid,
-        items: basketItems.map((item) => ({
-          productId: item.product.id,
-          name: item.product.name,
-          stock: item.stock,
-          price: item.product.price,
-          total: item.product.price * item.stock,
-        })),
-        shippingInfo: {
-          fullName: formData.fullName,
-          email: formData.email,
-          phoneNumber: formData.phoneNumber,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode,
-        },
-        paymentInfo: {
-          cardLast4: formData.cardNumber.slice(-4),
-          cardName: formData.cardName,
-        },
-        total: total,
-        status: "pending",
-        createdAt: new Date().toISOString(),
-      };
-
-      // Use a transaction to ensure all operations are atomic
-      await runTransaction(firestoreDB, async (transaction) => {
-        // Create the order
-        await addDoc(collection(firestoreDB, "orders"), orderData);
-
-        // Update product quantities
-        for (const item of basketItems) {
-          const productRef = doc(firestoreDB, "products", item.product.id);
-          const productDoc = await transaction.get(productRef);
-
-          if (!productDoc.exists()) {
-            throw new Error(`Product ${item.product.id} not found`);
-          }
-
-          const newStock = productDoc.data().stock - item.stock;
-          if (newStock < 0) {
-            throw new Error(
-              `Insufficient stock for product ${item.product.name}`
-            );
-          }
-
-          transaction.update(productRef, { stock: newStock });
-        }
+      const userRef = doc(firestoreDB, "users", user.uid);
+      await updateDoc(userRef, {
+        phoneNumber: formData.phoneNumber,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
       });
 
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Update product stock quantities
+      for (const item of basketItems) {
+        const productRef = doc(firestoreDB, "products", item.product.id);
+        const productDoc = await getDoc(productRef);
 
-      showNotification(t("checkout.notifications.orderSuccess"), "success");
-      clearBasket();
-      navigate("/my-purchases", { replace: true });
+        if (!productDoc.exists()) {
+          throw new Error(`Product ${item.product.id} not found`);
+        }
+
+        const currentStock = productDoc.data().stock;
+        const newStock = currentStock - item.stock;
+
+        if (newStock < 0) {
+          throw new Error("insufficient_stock");
+        }
+
+        await updateDoc(productRef, { stock: newStock });
+      }
+
+      // Generate PIX payment
+      const pixData = await generatePixPayment({
+        orderId: "", // Will be set after order creation
+        userId: user.uid,
+        sellerId: basketItems[0]?.product.owner || "",
+        amount: total,
+        transactionId: `PIX-${Date.now()}`,
+      });
+
+      if (!pixData) {
+        throw new Error("Failed to generate PIX payment");
+      }
+
+      setPixPaymentData(pixData);
+      showNotification("QR Code PIX gerado com sucesso!", "success");
+
+      // Start polling for payment status
+      startPaymentStatusPolling(pixData.transactionId!);
     } catch (error) {
-      console.error("Error placing order:", error);
-      showNotification(t("checkout.notifications.orderError"), "error");
+      console.error("Error in checkout process:", error);
+
+      // Handle specific error cases
+      if (error instanceof Error && error.message === "insufficient_stock") {
+        showNotification(
+          t("checkout.notifications.insufficientStock"),
+          "error"
+        );
+      } else {
+        showNotification(t("checkout.notifications.paymentError"), "error");
+      }
+
+      setCountdown(null); // Reset countdown on error
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Function to generate PIX payload according to Brazilian Central Bank specifications
-  const generatePixPayload = (pixData: PixPaymentData): string => {
-    const payload = [
-      "00020126", // Payload Format Indicator
-      "35", // Merchant Account Information
-      "0014BR.GOV.BCB.PIX", // GUI
-      "01", // Pix Key Type
-      pixData.pixKeyType.length.toString().padStart(2, "0") +
-        pixData.pixKeyType, // Pix Key Type Value
-      "02", // Pix Key
-      pixData.pixKey.length.toString().padStart(2, "0") + pixData.pixKey, // Pix Key Value
-      "52040000", // Merchant Category Code
-      "5303986", // Transaction Currency (BRL)
-      "5802BR", // Country Code
-      "5913", // Merchant Name
-      "12", // Merchant Name Length
-      "NITOS TRADEHUB STORE", // Merchant Name Value
-      "6008", // Merchant City
-      "06", // Merchant City Length
-      "CURITIBA", // Merchant City Value
-      "6207", // Additional Data Field
-      "05", // Reference Label
-      "03", // Reference Label Length
-      "PIX", // Reference Label Value
-      "6304", // CRC16
-    ].join("");
-
-    // Calculate CRC16 (this is a simplified version, in production use a proper CRC16 implementation)
-    const data = Uint8Array.from(payload);
+  // Function to calculate CRC16 for PIX payload
+  const calculateCRC16 = (payload: string): string => {
+    const polynomial = 0x1021;
     let crc = 0xffff;
-    for (let i = 0; i < data.length; i++) {
-      crc ^= data[i] << 8;
+
+    for (let i = 0; i < payload.length; i++) {
+      crc ^= payload.charCodeAt(i) << 8;
       for (let j = 0; j < 8; j++) {
-        if ((crc & 0x8000) > 0) {
-          crc = (crc << 1) ^ 0x1021;
+        if (crc & 0x8000) {
+          crc = ((crc << 1) ^ polynomial) & 0xffff;
         } else {
-          crc <<= 1;
+          crc = (crc << 1) & 0xffff;
         }
       }
     }
-    // Perform a final XOR operation and return the CRC value
-    return (crc ^ 0xffffffff).toString();
-    // return `${crc} & 0xffff`;
+
+    return crc.toString(16).toUpperCase().padStart(4, "0");
+  };
+
+  // Function to generate PIX payload
+  const generatePixPayload = (): string => {
+    const pixKey = import.meta.env.VITE_PIX_KEY;
+    const merchantName = import.meta.env.VITE_MERCHANT_NAME;
+    const merchantCity = import.meta.env.VITE_MERCHANT_CITY;
+    const amount = total.toFixed(2);
+
+    // Merchant Account Information (26)
+    const gui = "BR.GOV.BCB.PIX";
+    const guiField = `00${gui.length.toString().padStart(2, "0")}${gui}`;
+    const keyField = `01${pixKey.length.toString().padStart(2, "0")}${pixKey}`;
+    const merchantAccountInfo = `26${(guiField + keyField).length
+      .toString()
+      .padStart(2, "0")}${guiField}${keyField}`;
+
+    // Additional Data Field (62)
+    const referenceLabel = "PIX";
+    const additionalDataField = `62${("05" + "03" + referenceLabel).length
+      .toString()
+      .padStart(2, "0")}05${"03"}${referenceLabel}`;
+
+    // Build the payload
+    let payload =
+      "000201" +
+      merchantAccountInfo +
+      "52040000" +
+      "5303986" +
+      "54" +
+      amount.length.toString().padStart(2, "0") +
+      amount +
+      "5802BR" +
+      "59" +
+      merchantName.length.toString().padStart(2, "0") +
+      merchantName +
+      "60" +
+      merchantCity.length.toString().padStart(2, "0") +
+      merchantCity +
+      additionalDataField;
+
+    // CRC16
+    payload += "6304";
+    const crc = calculateCRC16(payload);
+    return payload + crc;
+  };
+
+  const validatePixKey = (key: string, type: string): boolean => {
+    const cpf = key.replace(/\D/g, "");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phone = key.replace(/\D/g, "");
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    switch (type) {
+      case "cpf":
+        return cpf.length === 11;
+      case "email":
+        return emailRegex.test(key);
+      case "phoneNumber":
+        return phone.length >= 10 && phone.length <= 11;
+      case "random":
+        return uuidRegex.test(key);
+      default:
+        return false;
+    }
   };
 
   // Function to generate PIX payment
-  const generatePixPayment = async () => {
+  const generatePixPayment = async (data: {
+    orderId: string;
+    userId: string;
+    sellerId: string;
+    amount: number;
+    transactionId: string;
+  }): Promise<PixPaymentData> => {
     if (!user) {
       showNotification(
         "Você precisa estar logado para fazer um pedido",
         "error"
       );
-      return;
+      return Promise.reject(new Error("User not logged in"));
     }
 
     try {
       setIsProcessing(true);
+
+      // Validate environment variables
+      const pixKey = import.meta.env.VITE_PIX_KEY;
+      const pixKeyType = import.meta.env.VITE_PIX_KEY_TYPE;
+
+      if (!pixKey || !pixKeyType) {
+        showNotification("Missing required PIX configuration", "error");
+        return Promise.reject(new Error("Missing PIX configuration"));
+      }
+
+      // Validate PIX key format
+      if (!validatePixKey(pixKey, pixKeyType)) {
+        showNotification("Invalid PIX key format", "error");
+        return Promise.reject(new Error("Invalid PIX key format"));
+      }
+
+      // Generate PIX payload
+      let pixPayload;
+      try {
+        pixPayload = generatePixPayload();
+      } catch (error) {
+        showNotification("Failed to generate PIX payload" + error, "error");
+        return Promise.reject(new Error("Failed to generate PIX payload"));
+      }
 
       // Create order in Firestore
       const orderData = {
@@ -463,64 +454,134 @@ const CheckoutPage: React.FC = () => {
           zipCode: formData.zipCode,
         },
         paymentMethod: "pix",
-        total: total,
-        status: "pending",
-        createdAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes expiration
-      };
-
-      const orderRef = await addDoc(
-        collection(firestoreDB, "orders"),
-        orderData
-      );
-
-      // Create PIX payment data
-      const pixData: PixPaymentData = {
-        orderId: orderRef.id,
-        userId: user.uid,
-        sellerId: basketItems[0]?.product.owner || "",
-        pixKey: "040.257.529.64", // Your PIX key
-        pixKeyType: "cpf", // Type of your PIX key
-        pixPayload: "", // Will be set after generation
-        amount: total,
+        total: data.amount,
         status: "pending",
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        pixPayment: {
+          pixPayload: pixPayload,
+          pixKey: pixKey,
+          expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        },
       };
 
-      // Generate PIX payload
-      const pixPayload = generatePixPayload(pixData);
-      pixData.pixPayload = pixPayload;
+      let orderRef;
+      try {
+        orderRef = await addDoc(collection(firestoreDB, "orders"), orderData);
+      } catch (error) {
+        showNotification("Failed to create order" + error, "error");
+        return Promise.reject(new Error("Failed to create order"));
+      }
 
-      // In production, you would call your payment provider's API here
-      // For example:
-      // const paymentResponse = await paymentProvider.createPixPayment({
-      //   amount: total,
-      //   pixKey: pixData.pixKey,
-      //   orderId: orderRef.id,
-      //   expiresAt: pixData.expiresAt,
-      // });
+      if (!orderRef) {
+        showNotification("Failed to create order", "error");
+        return Promise.reject(new Error("Failed to create order"));
+      }
 
-      const pixPaymentRef = await addDoc(
-        collection(firestoreDB, "pixPayments"),
-        {
-          ...pixData,
-          pixPayload,
-          // transactionId: paymentResponse.transactionId, // In production
-        }
-      );
+      // Create PIX payment data
+      const pixData: PixPaymentData = {
+        id: orderRef.id, // Use order ID as payment ID
+        orderId: orderRef.id,
+        userId: user.uid,
+        sellerId: data.sellerId,
+        pixKey,
+        pixKeyType: pixKeyType as "cpf" | "email" | "phoneNumber" | "random",
+        pixPayload,
+        amount: data.amount,
+        status: "pending",
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        transactionId: data.transactionId,
+      };
 
-      setPixPaymentData({ ...pixData, id: pixPaymentRef.id, pixPayload });
-      showNotification("QR Code PIX gerado com sucesso!", "success");
+      let pixPaymentRef;
+      try {
+        pixPaymentRef = await addDoc(
+          collection(firestoreDB, "pixPayments"),
+          pixData
+        );
+      } catch (error) {
+        showNotification(
+          "Failed to create PIX payment record" + error,
+          "error"
+        );
+        return Promise.reject(new Error("Failed to create PIX payment record"));
+      }
+
+      if (!pixPaymentRef) {
+        showNotification("Failed to create PIX payment record", "error");
+        return Promise.reject(new Error("Failed to create PIX payment record"));
+      }
+
+      return pixData;
     } catch (error) {
       console.error("Error generating PIX payment:", error);
       showNotification(
         "Erro ao gerar pagamento PIX. Tente novamente.",
         "error"
       );
+      return Promise.reject(error);
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Add payment status polling function
+  const startPaymentStatusPolling = (transactionId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const pixPaymentsRef = collection(firestoreDB, "pixPayments");
+        const q = query(
+          pixPaymentsRef,
+          where("transactionId", "==", transactionId)
+        );
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const pixPaymentDoc = querySnapshot.docs[0];
+          const pixPaymentData = pixPaymentDoc.data() as PixPaymentData;
+
+          if (pixPaymentData.status !== "pending") {
+            clearInterval(pollInterval);
+
+            if (pixPaymentData.status === "paid") {
+              showNotification("Pagamento PIX confirmado!", "success");
+              clearBasket();
+              navigate("/order-confirmation");
+            } else if (pixPaymentData.status === "expired") {
+              showNotification("Tempo para pagamento PIX expirado.", "error");
+            } else if (pixPaymentData.status === "failed") {
+              showNotification(
+                `Falha no pagamento: ${
+                  pixPaymentData.errorMessage || "Erro desconhecido"
+                }`,
+                "error"
+              );
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error polling payment status:", error);
+        clearInterval(pollInterval);
+
+        if (error) {
+          showNotification(
+            `Erro ao verificar status do pagamento: ${error}`,
+            "error"
+          );
+        } else {
+          showNotification(
+            "Erro ao verificar status do pagamento. Tente novamente.",
+            "error"
+          );
+        }
+      }
+    }, 5000); // Poll every 5 seconds
+
+    // Clear polling after 30 minutes (payment expiration)
+    setTimeout(() => {
+      clearInterval(pollInterval);
+    }, 30 * 60 * 1000);
   };
 
   // Update the updateProductQuantities function
@@ -620,6 +681,30 @@ const CheckoutPage: React.FC = () => {
       return () => unsubscribe();
     }
   }, [clearBasket, navigate, pixPaymentData, showNotification]);
+
+  // Update the useEffect for the countdown timer
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval>;
+    
+    if (countdown !== null && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown(prev => prev !== null ? prev - 1 : null);
+      }, 1000);
+    } else if (countdown === 0) {
+      // Clear basket and refresh products just before navigation
+      clearBasket();
+      if (productContext?.refreshProducts) {
+        productContext.refreshProducts();
+      }
+      navigate("/my-purchases");
+    }
+
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [countdown]); // Only depend on countdown value
 
   if (!basketItems || basketItems.length === 0) {
     return (
@@ -833,347 +918,112 @@ const CheckoutPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Payment Method Selection */}
+            {/* Payment Information */}
             <div>
               <h2 className="text-lg font-semibold mb-4">
                 {t("checkout.paymentMethod")}
               </h2>
               <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("credit_card")}
-                    className={`p-4 border rounded-lg text-center ${
-                      paymentMethod === "credit_card"
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-300 hover:border-blue-500"
-                    }`}
-                  >
-                    <div className="font-medium">
-                      {t("checkout.creditCard")}
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("pix")}
-                    className={`p-4 border rounded-lg text-center ${
-                      paymentMethod === "pix"
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-300 hover:border-blue-500"
-                    }`}
-                  >
-                    <div className="font-medium">{t("checkout.pix")}</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("bank_transfer")}
-                    className={`p-4 border rounded-lg text-center ${
-                      paymentMethod === "bank_transfer"
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-300 hover:border-blue-500"
-                    }`}
-                  >
-                    <div className="font-medium">
-                      {t("checkout.bankTransfer")}
-                    </div>
-                  </button>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    {t("checkout.pixDescription")}
+                  </p>
                 </div>
 
-                {/* Payment Forms */}
-                {paymentMethod === "credit_card" && (
-                  <div className="space-y-4">
-                    <div>
-                      <label
-                        htmlFor="cardNumber"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Número do Cartão
-                      </label>
-                      <input
-                        type="text"
-                        id="cardNumber"
-                        name="cardNumber"
-                        value={formData.cardNumber}
-                        onChange={handleInputChange}
-                        placeholder="1234 5678 9012 3456"
-                        className={`mt-1 block w-full rounded-md shadow-sm ${
-                          formErrors.cardNumber
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        }`}
-                      />
-                      {formErrors.cardNumber && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {formErrors.cardNumber}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="cardName"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Nome no Cartão
-                      </label>
-                      <input
-                        type="text"
-                        id="cardName"
-                        name="cardName"
-                        value={formData.cardName}
-                        onChange={handleInputChange}
-                        className={`mt-1 block w-full rounded-md shadow-sm ${
-                          formErrors.cardName
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        }`}
-                      />
-                      {formErrors.cardName && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {formErrors.cardName}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label
-                          htmlFor="expiryDate"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Data de Expiração
-                        </label>
-                        <input
-                          type="text"
-                          id="expiryDate"
-                          name="expiryDate"
-                          value={formData.expiryDate}
-                          onChange={handleInputChange}
-                          placeholder="MM/AA"
-                          className={`mt-1 block w-full rounded-md shadow-sm ${
-                            formErrors.expiryDate
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                        />
-                        {formErrors.expiryDate && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {formErrors.expiryDate}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="cvv"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          CVV
-                        </label>
-                        <input
-                          type="text"
-                          id="cvv"
-                          name="cvv"
-                          value={formData.cvv}
-                          onChange={handleInputChange}
-                          placeholder="123"
-                          className={`mt-1 block w-full rounded-md shadow-sm ${
-                            formErrors.cvv
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                        />
-                        {formErrors.cvv && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {formErrors.cvv}
-                          </p>
-                        )}
-                      </div>
+                {!pixPaymentData ? (
+                  <div>
+                    <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                      <p className="text-sm text-gray-600">
+                        {t("checkout.pixInstructions")}
+                      </p>
                     </div>
                   </div>
-                )}
-
-                {paymentMethod === "pix" && (
+                ) : (
                   <div className="space-y-4">
-                    {!pixPaymentData ? (
-                      <div>
-                        <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                          <p className="text-sm text-gray-600">
-                            Preencha os dados de entrega e clique em "Finalizar
-                            Compra" para gerar o QR Code PIX. O pedido será
-                            confirmado automaticamente após a confirmação do
-                            pagamento.
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="bg-white p-6 rounded-lg border border-gray-200">
-                          <h3 className="text-lg font-medium text-gray-900 mb-4">
-                            Pagamento PIX
-                          </h3>
+                    <div className="bg-white p-6 rounded-lg border border-gray-200">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">
+                        {t("checkout.pixPayment")}
+                      </h3>
 
-                          <div className="flex justify-center mb-4">
-                            {pixPaymentData && (
-                              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                                <QRCodeSVG
-                                  value={pixPaymentData.pixPayload || ""}
-                                  size={200}
-                                  level="H"
-                                  includeMargin={true}
-                                />
-                                <div className="mt-4 text-center">
-                                  <p className="text-sm text-gray-600">
-                                    Escaneie o QR Code com seu aplicativo
-                                    bancário
-                                  </p>
-                                  <p className="text-sm text-gray-600 mt-2">
-                                    Ou copie a chave PIX:{" "}
-                                    {pixPaymentData.pixKey}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="space-y-2 text-center">
-                            <p className="text-sm text-gray-600">
-                              Chave PIX: {pixPaymentData.pixKey}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Valor: R$ {pixPaymentData.amount.toFixed(2)}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Expira em:{" "}
-                              {new Date(
-                                pixPaymentData.expiresAt
-                              ).toLocaleTimeString()}
-                            </p>
-                          </div>
-
-                          <div className="mt-4">
-                            <div className="flex items-center justify-center space-x-2">
-                              <div
-                                className={`h-2 w-2 rounded-full ${
-                                  pixPaymentData.status === "paid"
-                                    ? "bg-green-500"
-                                    : pixPaymentData.status === "expired"
-                                    ? "bg-red-500"
-                                    : "bg-yellow-500"
-                                }`}
-                              ></div>
+                      <div className="flex flex-col items-center justify-center mb-4">
+                        {pixPaymentData && (
+                          <div className="bg-white p-4 rounded-lg border border-gray-200 flex flex-col items-center">
+                            <div className="w-[200px] h-[200px] flex items-center justify-center">
+                              <QRCodeSVG
+                                value={pixPaymentData.pixPayload}
+                                size={200}
+                                level="H"
+                                includeMargin={true}
+                              />
+                            </div>
+                            <div className="mt-4 text-center">
                               <p className="text-sm text-gray-600">
-                                {pixPaymentData.status === "paid"
-                                  ? "Pagamento confirmado"
-                                  : pixPaymentData.status === "expired"
-                                  ? "Tempo expirado"
-                                  : "Aguardando pagamento"}
+                                {t("checkout.scanQRCode")}
+                              </p>
+                              <p className="text-sm text-gray-600 mt-2">
+                                {t("checkout.copyPixKey")}:{" "}
+                                {pixPaymentData.pixKey}
                               </p>
                             </div>
                           </div>
-                        </div>
-
-                        {pixPaymentData.status === "expired" && (
-                          <button
-                            type="button"
-                            onClick={generatePixPayment}
-                            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            Gerar novo QR Code
-                          </button>
                         )}
                       </div>
+
+                      <div className="space-y-2 text-center">
+                        <p className="text-sm text-gray-600">
+                          {t("checkout.pixKey")}: {pixPaymentData.pixKey}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {t("checkout.amount")}: R${" "}
+                          {pixPaymentData.amount.toFixed(2)}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {t("checkout.expiresAt")}:{" "}
+                          {new Date(
+                            pixPaymentData.expiresAt
+                          ).toLocaleTimeString()}
+                        </p>
+                      </div>
+
+                      <div className="mt-4">
+                        <div className="flex items-center justify-center space-x-2">
+                          <div
+                            className={`h-2 w-2 rounded-full ${
+                              pixPaymentData.status === "paid"
+                                ? "bg-green-500"
+                                : pixPaymentData.status === "expired"
+                                ? "bg-red-500"
+                                : "bg-yellow-500"
+                            }`}
+                          ></div>
+                          <p className="text-sm text-gray-600">
+                            {pixPaymentData.status === "paid"
+                              ? t("checkout.paymentConfirmed")
+                              : pixPaymentData.status === "expired"
+                              ? t("checkout.paymentExpired")
+                              : t("checkout.waitingPayment")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {pixPaymentData.status === "expired" && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          generatePixPayment({
+                            orderId: pixPaymentData.orderId,
+                            userId: user!.uid,
+                            sellerId: basketItems[0]?.product.owner || "",
+                            amount: total,
+                            transactionId: pixPaymentData.transactionId!,
+                          })
+                        }
+                        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        {t("checkout.generateNewQRCode")}
+                      </button>
                     )}
-                  </div>
-                )}
-
-                {paymentMethod === "bank_transfer" && (
-                  <div className="space-y-4">
-                    <div>
-                      <label
-                        htmlFor="bankName"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Nome do Banco
-                      </label>
-                      <input
-                        type="text"
-                        id="bankName"
-                        name="bankName"
-                        value={formData.bankName}
-                        onChange={handleInputChange}
-                        className={`mt-1 block w-full rounded-md shadow-sm ${
-                          formErrors.bankName
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        }`}
-                      />
-                      {formErrors.bankName && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {formErrors.bankName}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="accountNumber"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Número da Conta
-                      </label>
-                      <input
-                        type="text"
-                        id="accountNumber"
-                        name="accountNumber"
-                        value={formData.accountNumber}
-                        onChange={handleInputChange}
-                        className={`mt-1 block w-full rounded-md shadow-sm ${
-                          formErrors.accountNumber
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        }`}
-                      />
-                      {formErrors.accountNumber && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {formErrors.accountNumber}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="accountHolder"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Nome do Titular
-                      </label>
-                      <input
-                        type="text"
-                        id="accountHolder"
-                        name="accountHolder"
-                        value={formData.accountHolder}
-                        onChange={handleInputChange}
-                        className={`mt-1 block w-full rounded-md shadow-sm ${
-                          formErrors.accountHolder
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        }`}
-                      />
-                      {formErrors.accountHolder && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {formErrors.accountHolder}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm text-gray-600">
-                        Após o pedido, você receberá os dados bancários para
-                        transferência. O pedido será confirmado após a
-                        confirmação do pagamento.
-                      </p>
-                    </div>
                   </div>
                 )}
               </div>
@@ -1181,15 +1031,21 @@ const CheckoutPage: React.FC = () => {
 
             <button
               type="submit"
-              disabled={isProcessing}
+              disabled={isProcessing || countdown !== null}
               className={`w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                isProcessing ? "opacity-75 cursor-not-allowed" : ""
+                isProcessing || countdown !== null
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
               }`}
             >
               {isProcessing ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
                   {t("checkout.processing")}
+                </div>
+              ) : countdown !== null ? (
+                <div className="flex items-center justify-center">
+                  {t("checkout.redirecting")} ({countdown}s)
                 </div>
               ) : (
                 t("checkout.placeOrder")
