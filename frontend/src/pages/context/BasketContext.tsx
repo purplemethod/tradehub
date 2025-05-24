@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { Product } from "../../types";
+import { useTranslation } from "react-i18next";
 
 interface BasketContextType {
   basketItems: Array<{ product: Product; stock: number }>;
@@ -37,6 +38,7 @@ const safeJSONParse = (data: string | null): Array<{ product: Product; stock: nu
 export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { t } = useTranslation();
   const [basketItems, setBasketItems] = useState<
     Array<{ product: Product; stock: number }>
   >(() => {
@@ -80,7 +82,7 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       // Validate product has stock
       if (!product.stock || product.stock <= 0) {
-        return { success: false, reason: "Product is out of stock" };
+        return { success: false, reason: t("products.errors.outOfStock") };
       }
 
       let updated = false;
@@ -115,13 +117,13 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
       await new Promise(resolve => setTimeout(resolve, 0));
 
       if (!updated) {
-        return { success: false, reason: "Cannot add more items than available stock" };
+        return { success: false, reason: t("products.errors.maxStockReached") };
       }
 
       return { success: true };
     } catch (error) {
       console.error("Error adding to basket:", error);
-      return { success: false, reason: "Failed to add item to basket" };
+      return { success: false, reason: t("cart.updateFailed") };
     }
   };
 
@@ -129,17 +131,17 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       // Validate stock is not negative
       if (stock < 0) {
-        return { success: false, reason: "Stock cannot be negative" };
+        return { success: false, reason: t("cart.cannotBeNegative") };
       }
 
       const item = basketItems.find((item) => item.product.id === productId);
       if (!item) {
-        return { success: false, reason: "Item not found in basket" };
+        return { success: false, reason: t("cart.errors.itemNotFound") };
       }
 
       // Validate stock doesn't exceed available stock
       if (stock > item.product.stock) {
-        return { success: false, reason: "Cannot exceed available stock" };
+        return { success: false, reason: t("cart.insufficientStock") };
       }
 
       // Update the stock
@@ -151,7 +153,7 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
       return { success: true };
     } catch (error) {
       console.error("Error updating stock:", error);
-      return { success: false, reason: "Failed to update stock" };
+      return { success: false, reason: t("cart.updateFailed") };
     }
   };
 

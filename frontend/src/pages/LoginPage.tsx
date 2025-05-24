@@ -19,7 +19,8 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
+  const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] =
+    useState(false);
   const { setUser } = useContext(UserContext)!;
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -61,8 +62,9 @@ const LoginPage: React.FC = () => {
       setUser(userCredential.user);
       showNotification(t("auth.notifications.loginSuccess"), "success");
       navigate("/home", { replace: true });
-    } catch {
-      showNotification(t("auth.notifications.loginError"), "error");
+    } catch (error) {
+      showNotification(t("auth.notifications.loginError" + error), "error");
+      console.error(error);
     }
   };
 
@@ -70,11 +72,13 @@ const LoginPage: React.FC = () => {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
+      console.log(result);
       setUser(result.user);
       showNotification(t("auth.notifications.loginSuccess"), "success");
       navigate("/home", { replace: true });
-    } catch {
-      showNotification(t("auth.notifications.loginError"), "error");
+    } catch (error) {
+      showNotification(t("auth.notifications.loginError" + error), "error");
+      console.error(error);
     }
   };
 

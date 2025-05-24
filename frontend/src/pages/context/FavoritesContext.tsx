@@ -86,10 +86,10 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         createdAt: new Date()
       });
 
-      showNotification(t('favorites.added'), 'success');
+      showNotification(t('products.favorites.added'), 'success');
     } catch (error) {
       console.error('Error adding to favorites:', error);
-      showNotification(t('favorites.errors.addFailed'), 'error');
+      showNotification(t('products.favorites.error'), 'error');
     }
   }, [userContext?.user, favorites, showNotification, t]);
 
@@ -101,10 +101,10 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (!favoriteToRemove) return;
 
       await deleteDoc(doc(firestoreDB, 'favorites', favoriteToRemove.id));
-      showNotification(t('favorites.removed'), 'success');
+      showNotification(t('products.favorites.removed'), 'success');
     } catch (error) {
       console.error('Error removing from favorites:', error);
-      showNotification(t('favorites.errors.removeFailed'), 'error');
+      showNotification(t('products.favorites.error'), 'error');
     }
   }, [userContext?.user, favorites, showNotification, t]);
 

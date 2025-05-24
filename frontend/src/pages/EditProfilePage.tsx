@@ -5,8 +5,10 @@ import UserContext from "./context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { NotificationPreferences } from "./components/NotificationPreferences";
 import type { UserProfile } from "../types";
+import { useTranslation } from "react-i18next";
 
 const EditProfilePage: React.FC = () => {
+  const { t } = useTranslation();
   const context = useContext(UserContext);
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
@@ -35,18 +37,16 @@ const EditProfilePage: React.FC = () => {
     }
 
     const fetchUserProfile = async () => {
-      // Wait for user context to finish loading
       if (!context) {
         return;
       }
 
-      const { user, userLoading: userLoading } = context;
+      const { user, userLoading } = context;
 
       if (userLoading) {
         return;
       }
 
-      // Only redirect if user context is done loading and there's no user
       if (!userLoading && !user) {
         navigate("/login");
         return;
@@ -74,18 +74,17 @@ const EditProfilePage: React.FC = () => {
         }
       } catch (err) {
         console.error("Error fetching user profile:", err);
-        setError("Failed to load profile data");
+        setError(t("profile.errorSaving"));
       }
     };
 
     fetchUserProfile();
-  }, [context?.user, navigate]);
+  }, [context?.user, navigate, t]);
 
-  // Show loading state while user context is loading
   if (!context || context.userLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        Carregando informações do usuário...
+        {t("common.loading")}
       </div>
     );
   }
@@ -110,10 +109,10 @@ const EditProfilePage: React.FC = () => {
         zipCode: profile.zipCode,
       });
 
-      setSuccess("Profile atualizado com sucesso!");
+      setSuccess(t("profile.management.changesSaved"));
     } catch (err) {
       console.error("Error updating profile:", err);
-      setError("Failed to update profile");
+      setError(t("profile.errorSaving"));
     } finally {
       setSaving(false);
     }
@@ -129,7 +128,7 @@ const EditProfilePage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Profile Settings</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("profile.management.editProfile")}</h1>
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -146,7 +145,7 @@ const EditProfilePage: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Nome
+            {t("profile.management.personalInfo.displayName")}
           </label>
           <input
             type="text"
@@ -159,7 +158,7 @@ const EditProfilePage: React.FC = () => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Email
+            {t("profile.management.personalInfo.email")}
           </label>
           <input
             type="email"
@@ -171,7 +170,7 @@ const EditProfilePage: React.FC = () => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Número Telefone
+            {t("profile.management.personalInfo.phoneNumber")}
           </label>
           <input
             type="tel"
@@ -184,7 +183,7 @@ const EditProfilePage: React.FC = () => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Endereço
+            {t("profile.management.personalInfo.address")}
           </label>
           <input
             type="text"
@@ -198,7 +197,7 @@ const EditProfilePage: React.FC = () => {
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Cidade
+              {t("profile.management.personalInfo.city")}
             </label>
             <input
               type="text"
@@ -211,7 +210,7 @@ const EditProfilePage: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Estado
+              {t("profile.management.personalInfo.state")}
             </label>
             <input
               type="text"
@@ -224,7 +223,7 @@ const EditProfilePage: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              País
+              {t("profile.management.personalInfo.country")}
             </label>
             <input
               type="text"
@@ -236,7 +235,7 @@ const EditProfilePage: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              CEP
+              {t("profile.management.personalInfo.zipCode")}
             </label>
             <input
               type="text"
@@ -254,28 +253,25 @@ const EditProfilePage: React.FC = () => {
             onClick={() => navigate(-1)}
             className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
           >
-            Cancelar
+            {t("common.cancel")}
           </button>
           <button
             type="submit"
             disabled={saving}
             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
           >
-            {saving ? "Salvando..." : "Salvar alterações"}
+            {saving ? t("common.saving") : t("common.saveChanges")}
           </button>
         </div>
       </form>
 
       <div className="space-y-8">
-        {/* Notification Preferences Section */}
         <section>
           <h2 className="text-xl font-semibold mb-4">
-            Notification Preferences
+            {t("profile.management.notifications")}
           </h2>
           <NotificationPreferences />
         </section>
-
-        {/* Other profile settings can be added here */}
       </div>
     </div>
   );

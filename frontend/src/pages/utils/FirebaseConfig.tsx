@@ -1,5 +1,10 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import {
+  browserLocalPersistence,
+  getAuth,
+  GoogleAuthProvider,
+  setPersistence,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -19,10 +24,13 @@ export const auth = getAuth(app);
 auth.useDeviceLanguage();
 auth.settings.appVerificationDisabledForTesting = false;
 
+// Set persistence to local
+setPersistence(auth, browserLocalPersistence);
+
 // Configure Google Auth Provider
 export const provider = new GoogleAuthProvider();
 provider.setCustomParameters({
-  prompt: 'select_account',
+  prompt: "select_account",
   // Add any additional OAuth scopes if needed
   // scopes: ['https://www.googleapis.com/auth/userinfo.email']
 });
@@ -31,8 +39,8 @@ provider.setCustomParameters({
 export const firestoreDB = getFirestore(app);
 
 // Add error handling for auth popup
-window.addEventListener('error', (event) => {
-  if (event.message.includes('Cross-Origin-Opener-Policy')) {
-    console.warn('COOP policy warning - this is expected in development');
+window.addEventListener("error", (event) => {
+  if (event.message.includes("Cross-Origin-Opener-Policy")) {
+    console.warn("COOP policy warning - this is expected in development");
   }
 });

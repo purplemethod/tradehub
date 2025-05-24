@@ -554,7 +554,7 @@ const EditProductPage: React.FC = () => {
                 htmlFor="price"
                 className="block text-sm font-medium text-gray-700"
               >
-                {t("products.price")}
+                {t("products.management.price")}
               </label>
               <input
                 type="number"
@@ -578,7 +578,7 @@ const EditProductPage: React.FC = () => {
                 htmlFor="stock"
                 className="block text-sm font-medium text-gray-700"
               >
-                {t("products.stock")}
+                {t("products.management.stock")}
               </label>
               <input
                 type="number"
@@ -609,7 +609,7 @@ const EditProductPage: React.FC = () => {
                 htmlFor="weight"
                 className="block text-sm font-medium text-gray-700"
               >
-                {t("products.weight")}
+                {t("products.management.weight")}
               </label>
               <input
                 type="text"
@@ -627,7 +627,7 @@ const EditProductPage: React.FC = () => {
                 htmlFor="dimensions"
                 className="block text-sm font-medium text-gray-700"
               >
-                {t("products.dimensions")}
+                {t("products.management.dimensions")}
               </label>
               <input
                 type="text"
@@ -645,7 +645,7 @@ const EditProductPage: React.FC = () => {
                 htmlFor="shippingCost"
                 className="block text-sm font-medium text-gray-700"
               >
-                {t("products.shippingCost")}
+                {t("products.management.shippingCost")}
               </label>
               <input
                 type="number"
@@ -672,7 +672,7 @@ const EditProductPage: React.FC = () => {
                 htmlFor="freeShipping"
                 className="ml-2 block text-sm text-gray-700"
               >
-                {t("products.freeShipping")}
+                {t("products.management.freeShipping")}
               </label>
             </div>
           </div>
@@ -694,7 +694,7 @@ const EditProductPage: React.FC = () => {
                 <div key={index} className="relative group">
                   <img
                     src={url}
-                    alt={`Product image ${index + 1}`}
+                    alt={t("products.imageAlt", { number: index + 1 })}
                     className="w-full h-32 object-cover rounded-lg"
                   />
                   <button
@@ -745,7 +745,7 @@ const EditProductPage: React.FC = () => {
         {/* Add YouTube Video Section */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-lg font-semibold mb-4">
-            {t("products.management.youtubeVideo")}
+            {t("products.newProduct.youtubeVideo")}
           </h2>
           <div className="space-y-4">
             <div>
@@ -753,7 +753,7 @@ const EditProductPage: React.FC = () => {
                 htmlFor="youtubeUrl"
                 className="block text-sm font-medium text-gray-700"
               >
-                {t("products.youtubeUrl")}
+                {t("products.newProduct.youtubeUrlPlaceholder")}
               </label>
               <div className="mt-1 flex rounded-md shadow-sm">
                 <input
@@ -761,7 +761,7 @@ const EditProductPage: React.FC = () => {
                   id="youtubeUrl"
                   value={youtubeUrl}
                   onChange={handleYoutubeUrlChange}
-                  placeholder={t("products.youtubeUrlPlaceholder")}
+                  placeholder={t("products.newProduct.youtubeUrlPlaceholder")}
                   className="flex-1 min-w-0 block w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
                 {youtubeUrl && (
@@ -817,7 +817,7 @@ const EditProductPage: React.FC = () => {
               htmlFor="status"
               className="block text-sm font-medium text-gray-700"
             >
-              {t("products.status")}
+              {t("products.management.status")}
             </label>
             <select
               id="status"

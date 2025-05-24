@@ -212,39 +212,35 @@ const NewProductPage: React.FC = () => {
     const newErrors: FormErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = t("products.management.validation.nameRequired");
+      newErrors.name = t("products.validation.nameRequired");
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = t(
-        "products.management.validation.descriptionRequired"
-      );
+      newErrors.description = t("products.validation.descriptionRequired");
     }
 
     if (!formData.price) {
-      newErrors.price = t("products.management.validation.priceRequired");
+      newErrors.price = t("products.validation.priceRequired");
     } else if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      newErrors.price = t("products.management.validation.priceInvalid");
+      newErrors.price = t("products.validation.priceInvalid");
     }
 
     if (!formData.stock) {
-      newErrors.stock = t("products.management.validation.stockRequired");
+      newErrors.stock = t("products.validation.stockRequired");
     } else if (isNaN(Number(formData.stock)) || Number(formData.stock) < 0) {
-      newErrors.stock = t("products.management.validation.stockInvalid");
+      newErrors.stock = t("products.validation.stockInvalid");
     }
 
     if (!formData.category) {
-      newErrors.category = t("products.management.validation.categoryRequired");
+      newErrors.category = t("products.validation.categoryRequired");
     }
 
     if (!formData.condition) {
-      newErrors.condition = t(
-        "products.management.validation.conditionRequired"
-      );
+      newErrors.condition = t("products.validation.conditionRequired");
     }
 
     if (mediaItems.length === 0) {
-      newErrors.images = t("products.management.validation.imageRequired");
+      newErrors.images = t("products.validation.imageRequired");
     }
 
     setErrors(newErrors);
@@ -383,14 +379,12 @@ const NewProductPage: React.FC = () => {
     e.preventDefault();
 
     if (!validateForm()) {
+      showNotification(t("products.validation.formErrors"), "error");
       return;
     }
 
     if (!user) {
-      showNotification(
-        t("products.management.errors.notAuthenticated"),
-        "error"
-      );
+      showNotification(t("products.errors.notAuthenticated"), "error");
       return;
     }
 
@@ -441,7 +435,6 @@ const NewProductPage: React.FC = () => {
           const chunks =
             base64Data.match(new RegExp(`.{1,${chunkSize}}`, "g")) || [];
           const chunkCount = chunks.length;
-          console.log("chunksLenght", chunks.length);
 
           const chunkBatch = writeBatch(firestoreDB);
           chunks.forEach((chunk, chunkIndex) => {
@@ -533,8 +526,8 @@ const NewProductPage: React.FC = () => {
               value={formData.name}
               onChange={handleInputChange}
               required
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-                errors.name ? "border-red-300" : ""
+              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                errors.name ? "border-red-500" : "border-gray-300"
               }`}
             />
             {errors.name && (
@@ -556,8 +549,8 @@ const NewProductPage: React.FC = () => {
               onChange={handleInputChange}
               required
               rows={4}
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-                errors.description ? "border-red-300" : ""
+              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                errors.description ? "border-red-500" : "border-gray-300"
               }`}
             />
             {errors.description && (
@@ -580,8 +573,13 @@ const NewProductPage: React.FC = () => {
               onChange={handleInputChange}
               required
               min="0"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                errors.stock ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {errors.stock && (
+              <p className="mt-1 text-sm text-red-600">{errors.stock}</p>
+            )}
           </div>
 
           <div>
@@ -600,8 +598,13 @@ const NewProductPage: React.FC = () => {
               required
               min="0"
               step="0.01"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                errors.price ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {errors.price && (
+              <p className="mt-1 text-sm text-red-600">{errors.price}</p>
+            )}
           </div>
 
           <div>
@@ -617,7 +620,9 @@ const NewProductPage: React.FC = () => {
               value={formData.category}
               onChange={handleInputChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                errors.category ? "border-red-500" : "border-gray-300"
+              }`}
             >
               <option value="">{t("products.selectCategory")}</option>
               {categories.map((cat) => (
@@ -626,6 +631,9 @@ const NewProductPage: React.FC = () => {
                 </option>
               ))}
             </select>
+            {errors.category && (
+              <p className="mt-1 text-sm text-red-600">{errors.category}</p>
+            )}
           </div>
 
           <div>
@@ -641,7 +649,9 @@ const NewProductPage: React.FC = () => {
               value={formData.condition}
               onChange={handleInputChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                errors.condition ? "border-red-500" : "border-gray-300"
+              }`}
             >
               <option value="">{t("products.selectCondition")}</option>
               {conditions.map((cat) => (
@@ -650,13 +660,16 @@ const NewProductPage: React.FC = () => {
                 </option>
               ))}
             </select>
+            {errors.condition && (
+              <p className="mt-1 text-sm text-red-600">{errors.condition}</p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t("products.newProduct.uploadImages")}
             </label>
-            <div className="flex gap-2 mb-4">
+            <div className={`flex gap-2 mb-4 ${errors.images ? 'border-2 border-red-500 rounded-md p-4' : ''}`}>
               {isMobile() && (
                 <button
                   type="button"
@@ -674,6 +687,9 @@ const NewProductPage: React.FC = () => {
                 {t("products.newProduct.selectPhotos")}
               </button>
             </div>
+            {errors.images && (
+              <p className="mt-1 text-sm text-red-600 font-medium">{errors.images}</p>
+            )}
 
             <div className="mb-4">
               <div className="flex gap-2">

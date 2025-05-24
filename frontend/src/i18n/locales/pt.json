@@ -298,7 +298,8 @@
       "stockInvalid": "Por favor, insira uma quantidade válida",
       "categoryRequired": "Categoria é obrigatória",
       "conditionRequired": "Condição é obrigatória",
-      "imageRequired": "Pelo menos uma imagem é obrigatória"
+      "imageRequired": "Pelo menos uma imagem é obrigatória",
+      "formErrors": "Por favor, corrija os erros no formulário"
     },
     "sellingProducts": "Produtos à Venda",
     "addedToCart": "Produto adicionado ao carrinho com sucesso",
@@ -314,7 +315,13 @@
     "questionSubmitted": "Pergunta enviada com sucesso",
     "answerSubmitted": "Resposta enviada com sucesso",
     "errors": {
+      "fetchQuestionsFailed": "Falha ao buscar perguntas",
+      "submitQuestionFailed": "Falha ao enviar pergunta",
+      "submitAnswerFailed": "Falha ao enviar resposta",
+      "ownerEmailNotFound": "Não foi possível enviar a pergunta: Informações do proprietário do produto não encontradas",
+      "deleteQuestionFailed": "Falha ao excluir pergunta",
       "outOfStock": "Produto fora de estoque",
+      "maxStockReached": "Estoque máximo disponível atingido",
       "invalidYoutubeUrl": "URL do YouTube inválida",
       "productNotFound": "Produto não encontrado",
       "removeImageFailed": "Falha ao remover imagem",
@@ -351,11 +358,9 @@
     "shippingAndTaxes": "Frete e impostos calculados no checkout",
     "or": "ou",
     "removeItem": "Remover item",
-    "updateQuantity": "Atualizar quantidade",
-    "quantity": "Quantidade",
-    "updateEstoque": "Atualizar quantidade",
+    "updateStock": "Atualizar quantidade",
     "stock": "Estoque",
-    "cannotBeNegative": "A quantidade não pode ser negativa",
+    "cannotBeNegative": "Estoque não pode ser negativo",
     "insufficientStock": "Estoque insuficiente disponível",
     "updateFailed": "Falha ao atualizar quantidade"
   },
@@ -408,6 +413,17 @@
       "preferences": "Preferências",
       "notifications": "Notificações",
       "security": "Segurança",
+      "changesSaved": "Alterações salvas com sucesso",
+      "personalInfo": {
+        "displayName": "Nome de Exibição",
+        "email": "E-mail",
+        "phoneNumber": "Número de Telefone",
+        "address": "Endereço",
+        "city": "Cidade",
+        "state": "Estado",
+        "country": "País",
+        "zipCode": "CEP"
+      },
       "validation": {
         "nameRequired": "Nome é obrigatório",
         "emailRequired": "Email é obrigatório",
@@ -430,7 +446,17 @@
     "loading": "Carregando...",
     "error": "Erro",
     "success": "Sucesso",
-    "info": "Informação"
+    "info": "Informação",
+    "preferences": {
+      "title": "Configurações de Notificação",
+      "soundEffects": "Efeitos Sonoros",
+      "soundEffectsDesc": "Tocar sons quando as notificações aparecem",
+      "duration": "Duração da Notificação",
+      "durationDesc": "Quanto tempo as notificações ficam visíveis",
+      "maxNotifications": "Máximo de Notificações",
+      "maxNotificationsDesc": "Número máximo de notificações mostradas ao mesmo tempo",
+      "preview": "Visualizar Notificação"
+    }
   },
   "orderConfirmation": {
     "title": "Pedido Confirmado!",

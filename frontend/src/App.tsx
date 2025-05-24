@@ -18,8 +18,8 @@ import EditProfilePage from "./pages/EditProfilePage";
 import MyPurchasesPage from "./pages/MyPurchasesPage";
 import SellingProductPage from "./pages/SellingProductPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
-import { FavoritesProvider } from './pages/context/FavoritesContext';
-import MyFavoritesPage from './pages/MyFavoritesPage';
+import { FavoritesProvider } from "./pages/context/FavoritesContext";
+import MyFavoritesPage from "./pages/MyFavoritesPage";
 
 const AuthGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, userLoading } = React.useContext(UserContext)!;

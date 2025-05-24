@@ -62,7 +62,7 @@ const BasketDrawer: React.FC<BasketDrawerProps> = ({
 
     const result = updateStock(productId, newStock);
     if (!result.success) {
-      showNotification(result.reason || t("cart.errors.updateFailed"), "error");
+      showNotification(result.reason || t("cart.updateFailed"), "error");
       return;
     }
   };

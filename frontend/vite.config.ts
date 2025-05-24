@@ -25,8 +25,11 @@ export default defineConfig({
   },
   server: {
     headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
-      'Cross-Origin-Embedder-Policy': 'require-corp'
+      'Cross-Origin-Opener-Policy': 'unsafe-none',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Resource-Policy': 'same-site',
+      'Set-Cookie': 'SameSite=None; Secure',
+      'Access-Control-Allow-Credentials': 'true'
     }
   }
 });

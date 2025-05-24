@@ -190,6 +190,7 @@
       "captureFromCamera": "Capture from Camera",
       "selectPhotos": "Select Photo(s)",
       "youtubeUrlPlaceholder": "Paste YouTube URL here",
+      "youtubeUrlHelp": "Enter a valid YouTube video URL to add a video to your product",
       "addVideo": "Add Video",
       "selectedMedia": "Selected Media",
       "youtubeVideo": "YouTube Video",
@@ -267,6 +268,7 @@
       "active": "Active",
       "inactive": "Inactive",
       "draft": "Draft",
+      "changesSaved": "Changes saved successfully",
       "validation": {
         "nameRequired": "Product name is required",
         "priceRequired": "Price is required",
@@ -299,7 +301,8 @@
       "stockInvalid": "Please enter a valid stock quantity",
       "categoryRequired": "Category is required",
       "conditionRequired": "Condition is required",
-      "imageRequired": "At least one image is required"
+      "imageRequired": "At least one image is required",
+      "formErrors": "Please correct the errors in the form"
     },
     "sellingProducts": "Selling Products",
     "addedToCart": "Product added to cart successfully",
@@ -321,6 +324,7 @@
       "ownerEmailNotFound": "Unable to submit question: Product owner information not found",
       "deleteQuestionFailed": "Failed to delete question",
       "outOfStock": "Product is out of stock",
+      "maxStockReached": "Maximum available stock reached",
       "invalidYoutubeUrl": "Invalid YouTube URL",
       "productNotFound": "Product not found",
       "removeImageFailed": "Failed to remove image",
@@ -359,7 +363,7 @@
     "removeItem": "Remove item",
     "updateStock": "Update stock",
     "stock": "Stock",
-    "cannotBeNegative": "Quantity cannot be negative",
+    "cannotBeNegative": "Stock cannot be negative",
     "insufficientStock": "Not enough stock available",
     "updateFailed": "Failed to update quantity"
   },
@@ -412,6 +416,17 @@
       "preferences": "Preferences",
       "notifications": "Notifications",
       "security": "Security",
+      "changesSaved": "Changes saved successfully",
+      "personalInfo": {
+        "displayName": "Display Name",
+        "email": "Email",
+        "phoneNumber": "Phone Number",
+        "address": "Address",
+        "city": "City",
+        "state": "State",
+        "country": "Country",
+        "zipCode": "ZIP Code"
+      },
       "validation": {
         "nameRequired": "Name is required",
         "emailRequired": "Email is required",
@@ -434,7 +449,17 @@
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
-    "info": "Information"
+    "info": "Information",
+    "preferences": {
+      "title": "Notification Settings",
+      "soundEffects": "Sound Effects",
+      "soundEffectsDesc": "Play sounds when notifications appear",
+      "duration": "Notification Duration",
+      "durationDesc": "How long notifications stay visible",
+      "maxNotifications": "Maximum Notifications",
+      "maxNotificationsDesc": "Maximum number of notifications shown at once",
+      "preview": "Preview Notification"
+    }
   },
   "orderConfirmation": {
     "title": "Order Confirmed!",

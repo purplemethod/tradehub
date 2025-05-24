@@ -1,8 +1,10 @@
 import React from 'react';
 import { useNotification } from '../context/NotificationContext';
+import { useTranslation } from 'react-i18next';
 
 export const NotificationPreferences: React.FC = () => {
   const { preferences, updatePreferences, showNotification } = useNotification();
+  const { t } = useTranslation();
 
   const handleSoundToggle = () => {
     updatePreferences({ soundEnabled: !preferences.soundEnabled });
@@ -23,21 +25,21 @@ export const NotificationPreferences: React.FC = () => {
   };
 
   const handlePreview = () => {
-    showNotification('This is a preview notification', 'info');
+    showNotification(t('notifications.preferences.preview'), 'info');
   };
 
   return (
     <div className="bg-white rounded-lg shadow p-6 max-w-md mx-auto">
-      <h2 className="text-lg font-medium text-gray-900 mb-4">Notification Settings</h2>
+      <h2 className="text-lg font-medium text-gray-900 mb-4">{t('notifications.preferences.title')}</h2>
       
       <div className="space-y-6">
         {/* Sound Toggle */}
         <div className="flex items-center justify-between">
           <div>
             <label htmlFor="sound-toggle" className="text-sm font-medium text-gray-700">
-              Sound Effects
+              {t('notifications.preferences.soundEffects')}
             </label>
-            <p className="text-sm text-gray-500">Play sounds when notifications appear</p>
+            <p className="text-sm text-gray-500">{t('notifications.preferences.soundEffectsDesc')}</p>
           </div>
           <button
             type="button"
@@ -59,7 +61,7 @@ export const NotificationPreferences: React.FC = () => {
         {/* Duration Slider */}
         <div>
           <label htmlFor="duration-slider" className="text-sm font-medium text-gray-700">
-            Notification Duration
+            {t('notifications.preferences.duration')}
           </label>
           <div className="mt-2 flex items-center space-x-4">
             <input
@@ -77,14 +79,14 @@ export const NotificationPreferences: React.FC = () => {
             </span>
           </div>
           <p className="mt-1 text-sm text-gray-500">
-            How long notifications stay visible
+            {t('notifications.preferences.durationDesc')}
           </p>
         </div>
 
         {/* Max Notifications Slider */}
         <div>
           <label htmlFor="max-notifications-slider" className="text-sm font-medium text-gray-700">
-            Maximum Notifications
+            {t('notifications.preferences.maxNotifications')}
           </label>
           <div className="mt-2 flex items-center space-x-4">
             <input
@@ -102,7 +104,7 @@ export const NotificationPreferences: React.FC = () => {
             </span>
           </div>
           <p className="mt-1 text-sm text-gray-500">
-            Maximum number of notifications shown at once
+            {t('notifications.preferences.maxNotificationsDesc')}
           </p>
         </div>
 
@@ -113,7 +115,7 @@ export const NotificationPreferences: React.FC = () => {
             onClick={handlePreview}
             className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            Preview Notificação
+            {t('notifications.preferences.preview')}
           </button>
         </div>
       </div>
