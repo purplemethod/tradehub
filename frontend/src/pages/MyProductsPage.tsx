@@ -16,8 +16,6 @@ import { useTranslation } from "react-i18next";
 import { useProducts } from "./context/ProductContextDefinition";
 import ImageModal from "./components/ImageModal";
 import type { Product } from "../types";
-import { canManageProducts } from "../utils/permissions";
-import { UserRole } from "../types";
 
 const MyProductsPage: React.FC = () => {
   const { t } = useTranslation();
