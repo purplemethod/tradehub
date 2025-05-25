@@ -15,7 +15,6 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   const { user, userLoading } = useContext(UserContext)!;
   const navigate = useNavigate();
   const { showNotification } = useNotification();
-  console.log("AuthGuard");
   useEffect(() => {
     if (!userLoading && !user) {
       navigate("/login", { replace: true });

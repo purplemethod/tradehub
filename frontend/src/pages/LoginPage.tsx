@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import UserContext from "./context/UserContext";
 import { useTranslation } from "react-i18next";
 import logo from "../assets/logoTradeHub.png";
-import { auth } from "./utils/FirebaseConfig";
+import { auth, firestoreDB } from "./utils/FirebaseConfig";
 import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import { useNotification } from "./context/NotificationContext";
 import { GoogleAuthProvider } from "firebase/auth";
 import ForgotPasswordModal from "./components/ForgotPasswordModal";
 import LoginLanguageSwitcher from "./components/LoginLanguageSwitcher";
-import type { UserProfile } from "../types";
+import { UserRole, type UserProfile } from "../types";
+import { doc, getDoc } from "firebase/firestore";
 
 interface FormErrors {
   email?: string;
@@ -60,10 +61,35 @@ const LoginPage: React.FC = () => {
         email,
         password
       );
-      setUser({
-        ...userCredential.user,
-        id: userCredential.user.uid,
-      } as unknown as UserProfile);
+      try {
+        const userRef = doc(firestoreDB, "users", userCredential.user.uid);
+        const userDoc = await getDoc(userRef);
+        const userData = userDoc.data();
+
+        if (userData) {
+          console.log("userDoc.exists()", userData);
+          setUser({
+            ...userData,
+            id: userData.id,
+            role: UserRole.BUYER,
+            email: userData.email,
+            displayName: userData.displayName,
+            photoURL: userData.photoURL,
+            createdAt: userData.createdAt || new Date(),
+          } as unknown as UserProfile);
+        } else {
+          setUser({
+            id: userCredential.user.uid,
+            email: userCredential.user.email || "",
+            displayName: userCredential.user.displayName || "",
+            photoURL: userCredential.user.photoURL || "",
+            role: UserRole.BUYER,
+            createdAt: new Date(),
+          } as unknown as UserProfile);
+        }
+      } catch (error) {
+        console.error("Error updating user document:", error);
+      }
       showNotification(t("auth.notifications.loginSuccess"), "success");
       navigate("/home", { replace: true });
     } catch (error) {
@@ -77,12 +103,28 @@ const LoginPage: React.FC = () => {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       console.log(result);
-      setUser(
-        {
-          ...result.user,
-          id: result.user.uid,
-        } as unknown as UserProfile
-      );
+      try {
+        // Create or update user document in Firestore
+        const userRef = doc(firestoreDB, "users", result.user.uid);
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+          console.log("userDoc.exists()");
+          setUser({
+            ...result.user,
+            id: result.user.uid,
+            role: UserRole.BUYER,
+            email: result.user.email,
+            displayName: result.user.displayName || "",
+            photoURL: result.user.photoURL || "",
+          } as unknown as UserProfile);
+        } else {
+          setUser(result.user as unknown as UserProfile);
+        }
+      } catch (error) {
+        console.error("Error updating user document:", error);
+        // Don't set user to null here, as the auth state is still valid
+      }
       showNotification(t("auth.notifications.loginSuccess"), "success");
       navigate("/home", { replace: true });
     } catch (error) {
