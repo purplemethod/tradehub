@@ -4,7 +4,7 @@ import { firestoreDB } from "./utils/FirebaseConfig";
 import UserContext from "./context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { NotificationPreferences } from "./components/NotificationPreferences";
-import { UserRole, type UserProfile } from "../types";
+import { type UserProfile } from "../types";
 import { useTranslation } from "react-i18next";
 
 const EditProfilePage: React.FC = () => {
@@ -26,7 +26,7 @@ const EditProfilePage: React.FC = () => {
     state: "",
     country: "",
     zipCode: "",
-    role: UserRole.BUYER,
+    role: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -52,7 +52,6 @@ const EditProfilePage: React.FC = () => {
         navigate("/login");
         return;
       }
-
       try {
         const userDoc = await getDoc(doc(firestoreDB, "users", user!.id));
         if (userDoc.exists()) {
@@ -69,7 +68,7 @@ const EditProfilePage: React.FC = () => {
             state: userData.state || "",
             country: userData.country || "",
             zipCode: userData.zipCode || "",
-            role: UserRole.BUYER,
+            role: userData.role,
             createdAt: userData.createdAt?.toDate() || new Date(),
             updatedAt: userData.updatedAt?.toDate() || new Date(),
           });
@@ -81,7 +80,7 @@ const EditProfilePage: React.FC = () => {
     };
 
     fetchUserProfile();
-  }, [context?.user, navigate, t]);
+  }, [context, navigate, t]);
 
   if (!context || context.userLoading) {
     return (
@@ -109,6 +108,7 @@ const EditProfilePage: React.FC = () => {
         state: profile.state,
         country: profile.country,
         zipCode: profile.zipCode,
+        role: profile.role,
       });
 
       setSuccess(t("profile.management.changesSaved"));

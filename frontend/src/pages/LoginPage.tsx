@@ -67,7 +67,6 @@ const LoginPage: React.FC = () => {
         const userData = userDoc.data();
 
         if (userData) {
-          console.log("userDoc.exists()", userData);
           setUser({
             ...userData,
             id: userData.id,

@@ -32,32 +32,58 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         if (!isMounted) return;
 
         if (user) {
-          setUser({...user, id: user.uid} as unknown as UserProfile);
           try {
             // Create or update user document in Firestore
             const userRef = doc(firestoreDB, "users", user.uid);
             const userDoc = await getDoc(userRef);
 
-            if (!userDoc.exists()) {
-              // Create new user document
-              await setDoc(userRef, {
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              await setDoc(
+                userRef,
+                {
+                  id: userData.id || "",
+                  email: userData.email || "",
+                  displayName: userData.displayName || "",
+                  photoURL: userData.photoURL || "",
+                  role: userData.role || UserRole.BUYER,
+                  createdAt: userData.createdAt || serverTimestamp(),
+                  lastLogin: serverTimestamp(),
+                },
+                { merge: true }
+              );
+              setUser({
+                ...userData,
+                id: userData.id || "",
+                email: userData.email || "",
+                displayName: userData.displayName || "",
+                photoURL: userData.photoURL || "",
+                role: userData.role || UserRole.BUYER,
+                createdAt: userData.createdAt || serverTimestamp(),
+                lastLogin: serverTimestamp(),
+              } as unknown as UserProfile);
+            } else {
+              await setDoc(
+                userRef,
+                {
+                  id: user.uid,
+                  email: user.email,
+                  displayName: user.displayName || "",
+                  photoURL: user.photoURL || "",
+                  role: UserRole.BUYER,
+                  createdAt: serverTimestamp(),
+                  lastLogin: serverTimestamp(),
+                },
+                { merge: true }
+              );
+              setUser({
+                ...user,
                 id: user.uid,
                 email: user.email,
                 displayName: user.displayName || "",
                 photoURL: user.photoURL || "",
                 role: UserRole.BUYER,
-                createdAt: serverTimestamp(),
-                lastLogin: serverTimestamp(),
-              });
-            } else {
-              // Update last login
-              await setDoc(
-                userRef,
-                {
-                  lastLogin: serverTimestamp(),
-                },
-                { merge: true }
-              );
+              } as unknown as UserProfile);
             }
           } catch (error) {
             console.error("Error updating user document:", error);
@@ -102,4 +128,3 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 };
 
 export default UserContext;
-

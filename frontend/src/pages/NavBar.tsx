@@ -25,6 +25,7 @@ import { useTranslation } from "react-i18next";
 import { useBasket } from "./context/useBasket";
 import type { Product } from "../types";
 import LanguageSwitcher from "./components/LanguageSwitcher";
+import { canManageProducts } from "../utils/permissions";
 
 type BasketItem = {
   product: Product;
@@ -254,13 +255,6 @@ const BasketDrawer: React.FC<BasketDrawerProps> = ({
   );
 };
 
-const navigation = [
-  { name: "nav.sellingProducts", href: "/home", current: false },
-  { name: "nav.myProducts", href: "/my-products", current: false },
-  { name: "nav.myFavorites", href: "/my-favorites", current: false },
-  { name: "nav.myPurchases", href: "/my-purchases", current: false },
-];
-
 const NavBar: React.FC = () => {
   const { user, logout } = useContext(UserContext)!;
   const navigate = useNavigate();
@@ -268,6 +262,18 @@ const NavBar: React.FC = () => {
     useBasket();
   const [isBasketOpen, setIsBasketOpen] = useState(false);
   const { t } = useTranslation();
+
+  const navigation = [
+    { name: "nav.sellingProducts", href: "/home", current: false },
+    user?.role &&
+      canManageProducts(user.role) && {
+        name: "nav.myProducts",
+        href: "/my-products",
+        current: false,
+      },
+    { name: "nav.myFavorites", href: "/my-favorites", current: false },
+    { name: "nav.myPurchases", href: "/my-purchases", current: false },
+  ];
 
   const handleLogout = async () => {
     try {
@@ -311,20 +317,23 @@ const NavBar: React.FC = () => {
                 </div>
                 <div className="hidden sm:ml-6 sm:block">
                   <div className="flex space-x-4">
-                    {navigation.map((item) => (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        aria-current={item.current ? "page" : undefined}
-                        className={`rounded-md px-3 py-2 text-sm font-medium ${
-                          item.current
-                            ? "bg-gray-900 text-white"
-                            : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                        }`}
-                      >
-                        {t(item.name)}
-                      </Link>
-                    ))}
+                    {navigation.map(
+                      (item) =>
+                        item && (
+                          <Link
+                            key={item.name}
+                            to={item.href}
+                            aria-current={item.current ? "page" : undefined}
+                            className={`rounded-md px-3 py-2 text-sm font-medium ${
+                              item.current
+                                ? "bg-gray-900 text-white"
+                                : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                            }`}
+                          >
+                            {t(item.name)}
+                          </Link>
+                        )
+                    )}
                   </div>
                 </div>
               </div>
@@ -387,14 +396,16 @@ const NavBar: React.FC = () => {
                         {t("profile.title")}
                       </Link>
                     </MenuItem>
-                    <MenuItem>
-                      <Link
-                        to="/my-products"
-                        className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
-                      >
-                        {t("products.myProducts")}
-                      </Link>
-                    </MenuItem>
+                    {user?.role && canManageProducts(user.role) && (
+                      <MenuItem>
+                        <Link
+                          to="/my-products"
+                          className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
+                        >
+                          {t("products.myProducts")}
+                        </Link>
+                      </MenuItem>
+                    )}
                     <MenuItem>
                       <Link
                         to="/my-favorites"
