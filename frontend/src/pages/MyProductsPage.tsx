@@ -16,6 +16,8 @@ import { useTranslation } from "react-i18next";
 import { useProducts } from "./context/ProductContextDefinition";
 import ImageModal from "./components/ImageModal";
 import type { Product } from "../types";
+import { canManageAllProducts } from "../utils/permissions";
+import { UserRole } from "../types";
 
 const MyProductsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -100,8 +102,12 @@ const MyProductsPage: React.FC = () => {
     }
     if (!productsLoading && products && products.length > 0) {
       setLoading(false);
-      // set my own products to show based on the ID.
-      setMyProducts(products.filter((product) => product.userId === user?.id));
+      // Show all products for admin, only owned products for others
+      setMyProducts(
+        canManageAllProducts(user?.role ?? UserRole.BUYER)
+          ? products
+          : products.filter((product) => product.userId === user?.id)
+      );
     }
     if (error) {
       console.error("Error fetching products:", error);
@@ -420,6 +426,11 @@ const MyProductsPage: React.FC = () => {
                       {t("products.management.stock")}: {product.stock}
                     </span>
                   </div>
+                  {canManageAllProducts(userContext?.user?.role ?? UserRole.BUYER) && (
+                    <div className="mt-2 text-sm text-gray-500">
+                      {t("products.owner")}: {product.owner}
+                    </div>
+                  )}
                   <div className="mt-4 flex justify-end space-x-2">
                     <button
                       onClick={() => handleEdit(product.id)}

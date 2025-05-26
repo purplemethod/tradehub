@@ -11,6 +11,11 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+    }
+
     // Allow read access to all collections
     match /{document=**} {
       allow read: if true;
@@ -23,12 +28,14 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (
         // Allow owner to update their product
         resource.data.userId == request.auth.uid ||
+        // Allow admin to update any product
+        isAdmin() ||
         // Allow stock updates during checkout
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock']) &&
          request.resource.data.stock <= resource.data.stock)
       );
       allow delete: if isAuthenticated() && 
-        resource.data.userId == request.auth.uid;
+        (resource.data.userId == request.auth.uid || isAdmin());
     }
     
     // Products questions collection rules

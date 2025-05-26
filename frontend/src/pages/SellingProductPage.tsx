@@ -15,7 +15,7 @@ const SellingProductPage: React.FC = () => {
   const { showNotification } = useNotification();
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const { products, productsLoading } = useProducts();
+  const { products, productsLoading, refreshProducts } = useProducts();
   const userContext = useContext(UserContext);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productImageIndices, setProductImageIndices] = useState<
@@ -58,13 +58,13 @@ const SellingProductPage: React.FC = () => {
       }),
       {}
     );
-
+    refreshProducts();
     setLoading(false);
     setProductImageIndices(initialIndices);
     setSelectedProduct(null);
     setSelectedImage(null);
     setIsModalOpen(false);
-  }, [userContext, productsLoading, products, navigate]);
+  }, [userContext, productsLoading,refreshProducts, products, navigate]);
 
   if (loading) {
     return (

@@ -337,13 +337,14 @@
       "ownerEmailNotFound": "Não foi possível enviar a pergunta: Informações do proprietário do produto não encontradas",
       "deleteQuestionFailed": "Falha ao excluir pergunta",
       "outOfStock": "Produto fora de estoque",
-      "maxStockReached": "Estoque máximo disponível atingido",
+      "maxStockReached": "Estoque máximo atingido",
       "invalidYoutubeUrl": "URL do YouTube inválida",
       "productNotFound": "Produto não encontrado",
       "removeImageFailed": "Falha ao remover imagem",
       "updateFailed": "Falha ao atualizar produto",
       "fetchError": "Erro ao buscar produtos",
-      "notAuthenticated": "Você precisa estar logado para realizar esta ação"
+      "notAuthenticated": "Você precisa estar logado para realizar esta ação",
+      "cannotBuyOwnProduct": "Você não pode comprar seu próprio produto"
     },
     "deleteQuestion": "Excluir Pergunta",
     "deleteQuestionConfirmation": "Tem certeza que deseja excluir esta pergunta?",
@@ -360,7 +361,8 @@
       "deleteSuccess": "Produto excluído com sucesso",
       "deleteError": "Erro ao excluir produto",
       "fetchError": "Erro ao buscar produtos"
-    }
+    },
+    "owner": "Proprietário"
   },
   "cart": {
     "title": "Carrinho de Compras",

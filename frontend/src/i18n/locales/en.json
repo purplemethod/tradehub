@@ -339,13 +339,14 @@
       "ownerEmailNotFound": "Unable to submit question: Product owner information not found",
       "deleteQuestionFailed": "Failed to delete question",
       "outOfStock": "Product is out of stock",
-      "maxStockReached": "Maximum available stock reached",
+      "maxStockReached": "Maximum stock reached",
       "invalidYoutubeUrl": "Invalid YouTube URL",
       "productNotFound": "Product not found",
       "removeImageFailed": "Failed to remove image",
       "updateFailed": "Failed to update product",
       "fetchError": "Error fetching products",
-      "notAuthenticated": "You must be logged in to perform this action"
+      "notAuthenticated": "You must be logged in to perform this action",
+      "cannotBuyOwnProduct": "You cannot buy your own product"
     },
     "deleteQuestion": "Delete Question",
     "deleteQuestionConfirmation": "Are you sure you want to delete this question?",
@@ -362,7 +363,8 @@
       "deleteSuccess": "Product deleted successfully",
       "deleteError": "Error deleting product",
       "fetchError": "Error fetching products"
-    }
+    },
+    "owner": "Owner"
   },
   "cart": {
     "title": "Shopping Cart",

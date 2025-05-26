@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { Product } from "../../types";
 import { useTranslation } from "react-i18next";
+import UserContext from "./UserContext";
 
 interface BasketContextType {
   basketItems: Array<{ product: Product; stock: number }>;
@@ -23,7 +24,7 @@ export const BasketContext = createContext<BasketContextType | undefined>(
   undefined
 );
 
-const STORAGE_KEY = "tradehub_basket";
+const BASE_STORAGE_KEY = "tradehub_basket";
 
 // Helper function to safely parse JSON
 const safeJSONParse = (data: string | null): Array<{ product: Product; stock: number }> | null => {
@@ -39,29 +40,42 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { t } = useTranslation();
-  const [basketItems, setBasketItems] = useState<
-    Array<{ product: Product; stock: number }>
-  >(() => {
-    // Initialize state from localStorage
-    const savedBasket = localStorage.getItem(STORAGE_KEY);
+  const { user } = useContext(UserContext)!;
+  const [basketItems, setBasketItems] = useState<Array<{ product: Product; stock: number }>>([]);
+
+  // Load basket when user changes
+  useEffect(() => {
+    if (!user?.email) {
+      setBasketItems([]);
+      return;
+    }
+
+    const storageKey = `${BASE_STORAGE_KEY}_${user.email}`;
+    const savedBasket = localStorage.getItem(storageKey);
     const parsedBasket = safeJSONParse(savedBasket);
-    return Array.isArray(parsedBasket) ? parsedBasket : [];
-  });
+    setBasketItems(Array.isArray(parsedBasket) ? parsedBasket : []);
+  }, [user]);
 
   // Save basket to localStorage whenever it changes
   useEffect(() => {
+    if (!user?.email) return;
+
     try {
+      const storageKey = `${BASE_STORAGE_KEY}_${user.email}`;
       const basketData = JSON.stringify(basketItems);
-      localStorage.setItem(STORAGE_KEY, basketData);
+      localStorage.setItem(storageKey, basketData);
     } catch (error) {
       console.error("Error saving basket to localStorage:", error);
     }
-  }, [basketItems]);
+  }, [basketItems, user]);
 
   // Listen for storage changes from other tabs
   useEffect(() => {
+    if (!user?.email) return;
+
+    const storageKey = `${BASE_STORAGE_KEY}_${user.email}`;
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && e.newValue) {
+      if (e.key === storageKey && e.newValue) {
         const newBasket = safeJSONParse(e.newValue);
         if (Array.isArray(newBasket)) {
           setBasketItems(newBasket);
@@ -71,7 +85,7 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  }, [user]);
 
   const basketCount = basketItems.reduce(
     (total, item) => total + item.stock,
@@ -83,6 +97,11 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
       // Validate product has stock
       if (!product.stock || product.stock <= 0) {
         return { success: false, reason: t("products.errors.outOfStock") };
+      }
+
+      // Validate product doesn't belong to the current user
+      if (product.owner === user?.email) {
+        return { success: false, reason: t("products.errors.cannotBuyOwnProduct") };
       }
 
       let updated = false;
@@ -169,8 +188,11 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const clearBasket = () => {
     try {
-      setBasketItems([]);
-      localStorage.removeItem(STORAGE_KEY);
+      if (user?.email) {
+        const storageKey = `${BASE_STORAGE_KEY}_${user.email}`;
+        setBasketItems([]);
+        localStorage.removeItem(storageKey);
+      }
     } catch (error) {
       console.error("Error clearing basket:", error);
     }

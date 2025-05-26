@@ -94,7 +94,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({
         // Add a small delay to prevent UI flicker if cache hit is fast
         loadingTimeout = setTimeout(() => {
           if (isMounted) {
-            console.log("Fetching full image from:", fullImageRef);
+            // console.log("Fetching full image from:", fullImageRef);
           }
         }, 100);
 
