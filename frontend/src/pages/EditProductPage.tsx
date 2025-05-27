@@ -508,11 +508,11 @@ const EditProductPage: React.FC = () => {
                 }`}
               >
                 <option value="">{t("products.selectCategory")}</option>
-                <option value="electronics">Electronics</option>
-                <option value="clothing">Clothing</option>
-                <option value="books">Books</option>
-                <option value="home">Home & Garden</option>
-                <option value="sports">Sports</option>
+                <option value="electronics">{t("products.categories.electronics")}</option>
+                <option value="clothing">{t("products.categories.clothing")}</option>
+                <option value="books">{t("products.categories.books")}</option>
+                <option value="home">{t("products.categories.home")}</option>
+                <option value="sports">{t("products.categories.sports")}</option>
               </select>
               {errors.category && (
                 <p className="mt-1 text-sm text-red-600">{errors.category}</p>
@@ -536,11 +536,11 @@ const EditProductPage: React.FC = () => {
                 }`}
               >
                 <option value="">{t("products.selectCondition")}</option>
-                <option value="new">New</option>
-                <option value="like_new">Like New</option>
-                <option value="good">Good</option>
-                <option value="fair">Fair</option>
-                <option value="poor">Poor</option>
+                <option value="new">{t("products.conditions.new")}</option>
+                <option value="like_new">{t("products.conditions.like_new")}</option>
+                <option value="good">{t("products.conditions.good")}</option>
+                <option value="fair">{t("products.conditions.fair")}</option>
+                <option value="poor">{t("products.conditions.poor")}</option>
               </select>
               {errors.condition && (
                 <p className="mt-1 text-sm text-red-600">{errors.condition}</p>

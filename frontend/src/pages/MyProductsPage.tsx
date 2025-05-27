@@ -193,6 +193,17 @@ const MyProductsPage: React.FC = () => {
       );
       await Promise.all(questionDeletePromises);
 
+      // Delete all associated favorites
+      const favoritesRef = collection(firestoreDB, "favorites");
+      const favoritesQuery = query(favoritesRef, where("productId", "==", productId));
+      const favoritesSnapshot = await getDocs(favoritesQuery);
+
+      // Delete all favorites
+      const favoritesDeletePromises = favoritesSnapshot.docs.map((favoriteDoc) =>
+        deleteDoc(favoriteDoc.ref)
+      );
+      await Promise.all(favoritesDeletePromises);
+
       // Delete all associated media
       for (const mediaItem of productData.imageMetadataRef) {
         if (mediaItem.fullImageRef) {

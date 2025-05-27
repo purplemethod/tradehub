@@ -168,7 +168,13 @@
     "description": "Descrição",
     "specifications": "Especificações",
     "relatedProducts": "Produtos Relacionados",
-    "categories": "Categorias",
+    "categories": {
+      "electronics": "Eletrônicos",
+      "clothing": "Roupas",
+      "books": "Livros",
+      "home": "Casa & Jardim",
+      "sports": "Esportes"
+    },
     "priceRange": "Faixa de Preço",
     "sortBy": "Ordenar por",
     "filterBy": "Filtrar por",
@@ -346,7 +352,8 @@
       "fetchError": "Erro ao buscar produtos",
       "notAuthenticated": "Você precisa estar logado para realizar esta ação",
       "cannotBuyOwnProduct": "Você não pode comprar seu próprio produto",
-      "imageProcessingFailed": "Falha ao processar imagem colada"
+      "imageProcessingFailed": "Falha ao processar imagem colada",
+      "fetchFailed": "Falha ao buscar produtos. Por favor, tente novamente."
     },
     "deleteQuestion": "Excluir Pergunta",
     "deleteQuestionConfirmation": "Tem certeza que deseja excluir esta pergunta?",
@@ -366,7 +373,18 @@
       "imagesPasted": "Imagens coladas com sucesso",
       "pasteImage": "Pressione Ctrl+V (ou Cmd+V) para colar uma imagem"
     },
-    "owner": "Proprietário"
+    "owner": "Proprietário",
+    "brand": "Marca",
+    "removeVideo": "Remover Vídeo",
+    "videoPreview": "Prévia do Vídeo",
+    "youtubeUrlHelp": "Digite uma URL válida do YouTube para adicionar um vídeo ao seu produto",
+    "conditions": {
+      "new": "Novo",
+      "like_new": "Semi-Novo - Pouco Uso",
+      "good": "Bom",
+      "fair": "Regular",
+      "poor": "Ruim"
+    }
   },
   "cart": {
     "title": "Carrinho de Compras",
@@ -384,7 +402,10 @@
     "stock": "Estoque",
     "cannotBeNegative": "Estoque não pode ser negativo",
     "insufficientStock": "Estoque insuficiente disponível",
-    "updateFailed": "Falha ao atualizar quantidade"
+    "updateFailed": "Falha ao atualizar quantidade",
+    "errors": {
+      "itemNotFound": "Item não encontrado no carrinho"
+    }
   },
   "orders": {
     "title": "Pedidos",
@@ -521,8 +542,12 @@
   },
   "favorites": {
     "title": "Meus Favoritos",
-    "empty": "Você ainda não adicionou nenhum produto aos favoritos.",
-    "browseProducts": "Procurar Produtos"
+    "empty": "Você ainda não adicionou nenhum produto aos favoritos",
+    "browseProducts": "Ver Produtos",
+    "errors": {
+      "fetchFailed": "Falha ao buscar favoritos. Por favor, tente novamente."
+    },
+    "alreadyFavorited": "Este produto já está nos seus favoritos"
   },
   "nav": {
     "sellingProducts": "Productos à Venda",

@@ -1,6 +1,5 @@
-import React, { useContext, useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import UserContext from "./context/UserContext";
 import {
   collection,
   doc,
@@ -17,22 +16,16 @@ import {
 import { useNotification } from "./context/NotificationContext";
 import { NotificationContainer } from "./components/NotificationContainer";
 import { useTranslation } from "react-i18next";
-import type { ImageMetadata, Product } from "../types";
+import type { ImageMetadata } from "../types";
 import { useProducts } from "./context/ProductContextDefinition";
+import UserContext from "./context/UserContext";
+import { useContext } from "react";
 
 declare global {
   interface Window {
-    opera?: string;
+    clipboardData: DataTransfer | null;
   }
 }
-
-const categories = ["Eletronico", "Livros", "Roupas", "Casa", "Outro"];
-const conditions = [
-  "Novo Selado",
-  "Semi-Novo - Pouco Uso",
-  "Usado",
-  "Beeeeeem Usado",
-];
 
 interface FormErrors {
   name?: string;
@@ -42,13 +35,6 @@ interface FormErrors {
   category?: string;
   condition?: string;
   images?: string;
-}
-
-interface YouTubeVideo {
-  url: string;
-  videoId: string;
-  thumbnailUrl: string;
-  type: "youtube";
 }
 
 interface ProductImage {
@@ -66,35 +52,33 @@ interface ProductImage {
   };
 }
 
+interface YouTubeVideo {
+  url: string;
+  videoId: string;
+  thumbnailUrl: string;
+  type: "youtube";
+}
+
 type MediaItem = ProductImage | YouTubeVideo;
 
 const NewProductPage: React.FC = () => {
   const { t } = useTranslation();
+  const { showNotification } = useNotification();
+  const { user } = useContext(UserContext)!;
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const { showNotification } = useNotification();
-  const { user } = useContext(UserContext)!;
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [formData, setFormData] = useState<Product>({
-    id: "",
+  const [formData, setFormData] = useState({
     name: "",
     description: "",
-    price: 0,
-    stock: 0,
+    price: "",
+    stock: "",
     category: "",
     condition: "",
-    owner: user?.email || "",
-    createdAt: Timestamp.now(),
-    brand: "",
-    weight: "",
-    dimensions: "",
-    shippingCost: 0,
-    freeShipping: false,
-    status: "draft",
   });
   const { refreshProducts } = useProducts();
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -113,56 +97,55 @@ const NewProductPage: React.FC = () => {
   }, [loading]);
 
   useEffect(() => {
-    const handlePaste = async (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-
-      const imageItems = Array.from(items).filter(item => item.type.startsWith('image/'));
-      if (imageItems.length === 0) return;
-
-      // Check if adding these images would exceed the limit
-      if (mediaItems.length + imageItems.length > 5) {
-        showNotification(t("products.maxImages"), "error");
-        return;
-      }
-
-      const newProductImages: ProductImage[] = [];
-
-      for (const item of imageItems) {
-        const file = item.getAsFile();
-        if (!file) continue;
-
-        try {
-          const thumbnailBlob = await createThumbnail(file, 200);
-          const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
-          const dimensions = await getImageDimensions(file);
-          
-          newProductImages.push({
-            file,
-            thumbnailUrl: thumbnailDataUrl,
-            fileInfo: {
-              name: file.name || 'pasted-image.png',
-              type: file.type,
-              size: formatFileSize(file.size),
-              estimatedChunks: calculateEstimatedChunks(file.size),
-              dimensions,
-            },
-          });
-        } catch (error) {
-          console.error("Error processing pasted image:", error);
-          showNotification(t("products.errors.imageProcessingFailed"), "error");
-        }
-      }
-
-      if (newProductImages.length > 0) {
-        setMediaItems(prev => [...prev, ...newProductImages]);
-        showNotification(t("products.notifications.imagesPasted"), "success");
-      }
-    };
-
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
   }, [mediaItems.length, showNotification, t]);
+
+  const handlePaste = async (e: ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const imageItems = Array.from(items).filter(item => item.type.startsWith('image/'));
+    if (imageItems.length === 0) return;
+
+    if (mediaItems.length + imageItems.length > 5) {
+      showNotification(t("products.maxImages"), "error");
+      return;
+    }
+
+    const newProductImages: ProductImage[] = [];
+
+    for (const item of imageItems) {
+      const file = item.getAsFile();
+      if (!file) continue;
+
+      try {
+        const thumbnailBlob = await createThumbnail(file, 200);
+        const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
+        const dimensions = await getImageDimensions(file);
+        
+        newProductImages.push({
+          file,
+          thumbnailUrl: thumbnailDataUrl,
+          fileInfo: {
+            name: file.name || 'pasted-image.png',
+            type: file.type,
+            size: formatFileSize(file.size),
+            estimatedChunks: calculateEstimatedChunks(file.size),
+            dimensions,
+          },
+        });
+      } catch (error) {
+        console.error("Error processing pasted image:", error);
+        showNotification(t("products.errors.imageProcessingFailed"), "error");
+      }
+    }
+
+    if (newProductImages.length > 0) {
+      setMediaItems(prev => [...prev, ...newProductImages]);
+      showNotification(t("products.notifications.imagesPasted"), "success");
+    }
+  };
 
   const extractYouTubeId = (url: string): string | null => {
     // Handle YouTube Shorts URLs
@@ -207,11 +190,11 @@ const NewProductPage: React.FC = () => {
 
       const thumbnailUrl = await getYouTubeThumbnail(videoId);
 
-      const youtubeVideo: YouTubeVideo = {
+      const youtubeVideo: MediaItem = {
+        type: "youtube",
         url: youtubeUrl,
         videoId,
         thumbnailUrl,
-        type: "youtube",
       };
 
       setMediaItems((prev) => [...prev, youtubeVideo]);
@@ -225,7 +208,7 @@ const NewProductPage: React.FC = () => {
 
   const removeMediaItem = (indexToRemove: number) => {
     setMediaItems((prev) => prev.filter((_, index) => index !== indexToRemove));
-    if ("file" in mediaItems[indexToRemove]) {
+    if ("videoId" in mediaItems[indexToRemove]) {
       const newFiles = [...selectedFiles];
       newFiles.splice(indexToRemove, 1);
       setSelectedFiles(newFiles);
@@ -309,97 +292,92 @@ const NewProductPage: React.FC = () => {
     cameraInputRef.current?.click();
   };
 
-  const handleCameraChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleCameraChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    for (const file of files!) {
+    if (!files) return;
+
+    for (const file of files) {
       if (!file.type.startsWith("image/")) {
         showNotification("All files must be image type", "error");
         return;
       }
     }
-    // Set maximum images to upload
-    if (files && files.length > 5) {
+
+    if (files.length > 5) {
       showNotification("You can only upload a maximum of 5 images", "error");
       return;
     }
 
-    if (event.target.files) {
-      const filesArray = Array.from(event.target.files);
-      setSelectedFiles(filesArray);
-      const newProductImages: ProductImage[] = [];
-      for (const file of filesArray) {
-        try {
-          const thumbnailBlob = await createThumbnail(file, 200);
-          const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
-          const dimensions = await getImageDimensions(file);
-          newProductImages.push({
-            file,
-            thumbnailUrl: thumbnailDataUrl,
-            fileInfo: {
-              name: file.name,
-              type: file.type,
-              size: formatFileSize(file.size),
-              estimatedChunks: calculateEstimatedChunks(file.size),
-              dimensions,
-            },
-          });
-        } catch (error) {
-          console.error("Erro ao processar imagem:", error);
-        }
+    const filesArray = Array.from(files);
+    setSelectedFiles(filesArray);
+    const newProductImages: ProductImage[] = [];
+
+    for (const file of filesArray) {
+      try {
+        const thumbnailBlob = await createThumbnail(file, 200);
+        const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
+        const dimensions = await getImageDimensions(file);
+        
+        newProductImages.push({
+          file,
+          thumbnailUrl: thumbnailDataUrl,
+          fileInfo: {
+            name: file.name,
+            type: file.type,
+            size: formatFileSize(file.size),
+            estimatedChunks: calculateEstimatedChunks(file.size),
+            dimensions,
+          },
+        });
+      } catch (error) {
+        console.error("Error processing image:", error);
       }
-      setMediaItems((prev) => [...prev, ...newProductImages]);
     }
+    setMediaItems((prev) => [...prev, ...newProductImages]);
   };
 
-  const handleGalleryChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleGalleryChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    for (const file of files!) {
+    if (!files) return;
+
+    for (const file of files) {
       if (!file.type.startsWith("image/")) {
         showNotification("All files must be image type", "error");
         return;
       }
     }
 
-    // Set maximum images to upload
-    if (files && files.length > 5) {
+    if (files.length > 5) {
       showNotification("You can only upload a maximum of 5 images", "error");
       return;
     }
 
-    if (event.target.files) {
-      const filesArray = Array.from(event.target.files);
+    const filesArray = Array.from(files);
+    setSelectedFiles((prevFiles) => [...prevFiles, ...filesArray]);
+    const newProductImages: ProductImage[] = [];
 
-      setSelectedFiles((prevFiles: File[]) => {
-        const prevFilesArray = Array.isArray(prevFiles) ? prevFiles : [];
-        return [...prevFilesArray, ...filesArray];
-      });
-      const newProductImages: ProductImage[] = [];
-      for (const file of filesArray) {
-        try {
-          const thumbnailBlob = await createThumbnail(file, 200);
-          const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
-          const dimensions = await getImageDimensions(file);
-          newProductImages.push({
-            file,
-            thumbnailUrl: thumbnailDataUrl,
-            fileInfo: {
-              name: file.name,
-              type: file.type,
-              size: formatFileSize(file.size),
-              estimatedChunks: calculateEstimatedChunks(file.size),
-              dimensions,
-            },
-          });
-        } catch (error) {
-          console.error("Erro ao processar imagem:", error);
-        }
+    for (const file of filesArray) {
+      try {
+        const thumbnailBlob = await createThumbnail(file, 200);
+        const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
+        const dimensions = await getImageDimensions(file);
+        
+        newProductImages.push({
+          file,
+          thumbnailUrl: thumbnailDataUrl,
+          fileInfo: {
+            name: file.name,
+            type: file.type,
+            size: formatFileSize(file.size),
+            estimatedChunks: calculateEstimatedChunks(file.size),
+            dimensions,
+          },
+        });
+      } catch (error) {
+        console.error("Error processing image:", error);
       }
-      setMediaItems((prev) => [...prev, ...newProductImages]);
     }
+    setMediaItems((prev) => [...prev, ...newProductImages]);
   };
 
   const handleInputChange = (
@@ -420,11 +398,8 @@ const NewProductPage: React.FC = () => {
   };
 
   const isMobile = () => {
-    const userAgent =
-      navigator.userAgent || navigator.vendor || window.opera || "";
-    return /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-      userAgent
-    );
+    const userAgent = navigator.userAgent || navigator.vendor || "";
+    return /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -677,11 +652,11 @@ const NewProductPage: React.FC = () => {
               }`}
             >
               <option value="">{t("products.selectCategory")}</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
+              <option value="electronics">{t("products.categories.electronics")}</option>
+              <option value="clothing">{t("products.categories.clothing")}</option>
+              <option value="books">{t("products.categories.books")}</option>
+              <option value="home">{t("products.categories.home")}</option>
+              <option value="sports">{t("products.categories.sports")}</option>
             </select>
             {errors.category && (
               <p className="mt-1 text-sm text-red-600">{errors.category}</p>
@@ -706,11 +681,11 @@ const NewProductPage: React.FC = () => {
               }`}
             >
               <option value="">{t("products.selectCondition")}</option>
-              {conditions.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
+              <option value="new">{t("products.conditions.new")}</option>
+              <option value="like_new">{t("products.conditions.like_new")}</option>
+              <option value="good">{t("products.conditions.good")}</option>
+              <option value="fair">{t("products.conditions.fair")}</option>
+              <option value="poor">{t("products.conditions.poor")}</option>
             </select>
             {errors.condition && (
               <p className="mt-1 text-sm text-red-600">{errors.condition}</p>

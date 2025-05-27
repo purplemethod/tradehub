@@ -168,7 +168,13 @@
     "description": "Description",
     "specifications": "Specifications",
     "relatedProducts": "Related Products",
-    "categories": "Categories",
+    "categories": {
+      "electronics": "Electronics",
+      "clothing": "Clothing",
+      "books": "Books",
+      "home": "Home & Garden",
+      "sports": "Sports"
+    },
     "priceRange": "Price Range",
     "sortBy": "Sort by",
     "filterBy": "Filter by",
@@ -348,7 +354,8 @@
       "fetchError": "Error fetching products",
       "notAuthenticated": "You must be logged in to perform this action",
       "cannotBuyOwnProduct": "You cannot buy your own product",
-      "imageProcessingFailed": "Failed to process pasted image"
+      "imageProcessingFailed": "Failed to process pasted image",
+      "fetchFailed": "Failed to fetch products. Please try again."
     },
     "deleteQuestion": "Delete Question",
     "deleteQuestionConfirmation": "Are you sure you want to delete this question?",
@@ -368,7 +375,18 @@
       "imagesPasted": "Images pasted successfully",
       "pasteImage": "Press Ctrl+V (or Cmd+V) to paste an image"
     },
-    "owner": "Owner"
+    "owner": "Owner",
+    "brand": "Brand",
+    "removeVideo": "Remove Video",
+    "videoPreview": "Video Preview",
+    "youtubeUrlHelp": "Enter a valid YouTube video URL to add a video to your product",
+    "conditions": {
+      "new": "New",
+      "like_new": "Like New",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor"
+    }
   },
   "cart": {
     "title": "Shopping Cart",
@@ -386,7 +404,10 @@
     "stock": "Stock",
     "cannotBeNegative": "Stock cannot be negative",
     "insufficientStock": "Not enough stock available",
-    "updateFailed": "Failed to update quantity"
+    "updateFailed": "Failed to update quantity",
+    "errors": {
+      "itemNotFound": "Item not found in cart"
+    }
   },
   "orders": {
     "title": "Orders",
@@ -523,8 +544,12 @@
   },
   "favorites": {
     "title": "My Favorites",
-    "empty": "You haven't added any products to your favorites yet.",
-    "browseProducts": "Browse Products"
+    "empty": "You haven't added any products to your favorites yet",
+    "browseProducts": "Browse Products",
+    "errors": {
+      "fetchFailed": "Failed to fetch favorites. Please try again."
+    },
+    "alreadyFavorited": "This product is already in your favorites"
   },
   "nav": {
     "sellingProducts": "Selling Products",
