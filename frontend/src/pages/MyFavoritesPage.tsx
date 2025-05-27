@@ -73,7 +73,6 @@ const MyFavoritesPage: React.FC = () => {
   const handleRemoveFavorite = async (productId: string) => {
     try {
       await removeFromFavorites(productId);
-      showNotification(t('products.favoriteRemoved'), 'success');
     } catch (error) {
       console.error('Error removing favorite:', error);
       showNotification(t('products.favoriteRemoveError'), 'error');
