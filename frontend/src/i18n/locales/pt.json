@@ -223,7 +223,8 @@
       "type": "Tipo",
       "size": "Tamanho",
       "pixels": "pixels",
-      "estimatedChunks": "Chunks Estimados"
+      "estimatedChunks": "Chunks Estimados",
+      "pasteImage": "Colar Imagem"
     },
     "editProduct": "Editar Produto",
     "deleteProduct": "Excluir Produto",
@@ -344,7 +345,8 @@
       "updateFailed": "Falha ao atualizar produto",
       "fetchError": "Erro ao buscar produtos",
       "notAuthenticated": "Você precisa estar logado para realizar esta ação",
-      "cannotBuyOwnProduct": "Você não pode comprar seu próprio produto"
+      "cannotBuyOwnProduct": "Você não pode comprar seu próprio produto",
+      "imageProcessingFailed": "Falha ao processar imagem colada"
     },
     "deleteQuestion": "Excluir Pergunta",
     "deleteQuestionConfirmation": "Tem certeza que deseja excluir esta pergunta?",
@@ -360,7 +362,9 @@
       "updateError": "Erro ao atualizar produto",
       "deleteSuccess": "Produto excluído com sucesso",
       "deleteError": "Erro ao excluir produto",
-      "fetchError": "Erro ao buscar produtos"
+      "fetchError": "Erro ao buscar produtos",
+      "imagesPasted": "Imagens coladas com sucesso",
+      "pasteImage": "Pressione Ctrl+V (ou Cmd+V) para colar uma imagem"
     },
     "owner": "Proprietário"
   },

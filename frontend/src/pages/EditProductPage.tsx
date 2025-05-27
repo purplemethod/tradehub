@@ -30,6 +30,8 @@ const EditProductPage: React.FC = () => {
   const { products, productsLoading, refreshProducts } = useProducts();
   const [product, setProduct] = useState<Product | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -47,8 +49,6 @@ const EditProductPage: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
   const extractYoutubeId = (url: string): string | null => {
     const regExp =
@@ -151,6 +151,51 @@ const EditProductPage: React.FC = () => {
       navigate("/my-products");
     }
   }, [productId, products, productsLoading, navigate, showNotification, t]);
+
+  useEffect(() => {
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const imageItems = Array.from(items).filter(item => item.type.startsWith('image/'));
+      if (imageItems.length === 0) return;
+
+      // Check if adding these images would exceed the limit
+      const totalImages = (product?.imageMetadataRef?.length || 0) + imageItems.length;
+      if (totalImages > 5) {
+        showNotification(t("products.maxImages"), "error");
+        return;
+      }
+
+      const newFiles: File[] = [];
+      const newPreviewUrls: string[] = [];
+
+      for (const item of imageItems) {
+        const file = item.getAsFile();
+        if (!file) continue;
+
+        try {
+          const thumbnailBlob = await createThumbnail(file, 200);
+          const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
+          
+          newFiles.push(file);
+          newPreviewUrls.push(thumbnailDataUrl);
+        } catch (error) {
+          console.error("Error processing pasted image:", error);
+          showNotification(t("products.errors.imageProcessingFailed"), "error");
+        }
+      }
+
+      if (newFiles.length > 0) {
+        setSelectedFiles(prev => [...prev, ...newFiles]);
+        setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+        showNotification(t("products.notifications.imagesPasted"), "success");
+      }
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [product?.imageMetadataRef?.length, showNotification, t]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -737,6 +782,16 @@ const EditProductPage: React.FC = () => {
                 <p className="text-xs text-gray-500">
                   {t("products.imageTypes")}
                 </p>
+                <button
+                  type="button"
+                  className="mt-2 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  onClick={() => {
+                    document.body.focus();
+                    showNotification(t("products.notifications.pasteImage"), "info");
+                  }}
+                >
+                  {t("products.newProduct.pasteImage")}
+                </button>
               </div>
             </div>
           </div>

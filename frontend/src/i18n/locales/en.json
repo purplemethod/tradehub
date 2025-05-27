@@ -224,7 +224,8 @@
         "categoryRequired": "Category is required",
         "conditionRequired": "Condition is required",
         "imageRequired": "At least one image is required"
-      }
+      },
+      "pasteImage": "Paste Image"
     },
     "editProduct": "Edit Product",
     "deleteProduct": "Delete Product",
@@ -346,7 +347,8 @@
       "updateFailed": "Failed to update product",
       "fetchError": "Error fetching products",
       "notAuthenticated": "You must be logged in to perform this action",
-      "cannotBuyOwnProduct": "You cannot buy your own product"
+      "cannotBuyOwnProduct": "You cannot buy your own product",
+      "imageProcessingFailed": "Failed to process pasted image"
     },
     "deleteQuestion": "Delete Question",
     "deleteQuestionConfirmation": "Are you sure you want to delete this question?",
@@ -362,7 +364,9 @@
       "updateError": "Error updating product",
       "deleteSuccess": "Product deleted successfully",
       "deleteError": "Error deleting product",
-      "fetchError": "Error fetching products"
+      "fetchError": "Error fetching products",
+      "imagesPasted": "Images pasted successfully",
+      "pasteImage": "Press Ctrl+V (or Cmd+V) to paste an image"
     },
     "owner": "Owner"
   },

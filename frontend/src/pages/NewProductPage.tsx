@@ -97,6 +97,8 @@ const NewProductPage: React.FC = () => {
     status: "draft",
   });
   const { refreshProducts } = useProducts();
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -109,6 +111,58 @@ const NewProductPage: React.FC = () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [loading]);
+
+  useEffect(() => {
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const imageItems = Array.from(items).filter(item => item.type.startsWith('image/'));
+      if (imageItems.length === 0) return;
+
+      // Check if adding these images would exceed the limit
+      if (mediaItems.length + imageItems.length > 5) {
+        showNotification(t("products.maxImages"), "error");
+        return;
+      }
+
+      const newProductImages: ProductImage[] = [];
+
+      for (const item of imageItems) {
+        const file = item.getAsFile();
+        if (!file) continue;
+
+        try {
+          const thumbnailBlob = await createThumbnail(file, 200);
+          const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
+          const dimensions = await getImageDimensions(file);
+          
+          newProductImages.push({
+            file,
+            thumbnailUrl: thumbnailDataUrl,
+            fileInfo: {
+              name: file.name || 'pasted-image.png',
+              type: file.type,
+              size: formatFileSize(file.size),
+              estimatedChunks: calculateEstimatedChunks(file.size),
+              dimensions,
+            },
+          });
+        } catch (error) {
+          console.error("Error processing pasted image:", error);
+          showNotification(t("products.errors.imageProcessingFailed"), "error");
+        }
+      }
+
+      if (newProductImages.length > 0) {
+        setMediaItems(prev => [...prev, ...newProductImages]);
+        showNotification(t("products.notifications.imagesPasted"), "success");
+      }
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [mediaItems.length, showNotification, t]);
 
   const extractYouTubeId = (url: string): string | null => {
     // Handle YouTube Shorts URLs
@@ -247,12 +301,10 @@ const NewProductPage: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const galleryInputRef = useRef<HTMLInputElement>(null);
   const triggerGalleryInput = () => {
     galleryInputRef.current?.click();
   };
 
-  const cameraInputRef = useRef<HTMLInputElement>(null);
   const triggerCameraInput = () => {
     cameraInputRef.current?.click();
   };
@@ -685,6 +737,17 @@ const NewProductPage: React.FC = () => {
                 onClick={triggerGalleryInput}
               >
                 {t("products.newProduct.selectPhotos")}
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                onClick={() => {
+                  // Focus on the document to enable paste
+                  document.body.focus();
+                  showNotification(t("products.notifications.pasteImage"), "info");
+                }}
+              >
+                {t("products.newProduct.pasteImage")}
               </button>
             </div>
             {errors.images && (
