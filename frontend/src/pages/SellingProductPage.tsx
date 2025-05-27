@@ -29,6 +29,10 @@ const SellingProductPage: React.FC = () => {
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
 
   useEffect(() => {
+    refreshProducts();
+  }, [refreshProducts]);
+
+  useEffect(() => {
     // Wait for user context to finish loading
     if (!userContext) {
       return;
@@ -58,13 +62,13 @@ const SellingProductPage: React.FC = () => {
       }),
       {}
     );
-    refreshProducts();
+
     setLoading(false);
     setProductImageIndices(initialIndices);
     setSelectedProduct(null);
     setSelectedImage(null);
     setIsModalOpen(false);
-  }, [userContext, productsLoading,refreshProducts, products, navigate]);
+  }, [userContext, productsLoading, products, navigate]);
 
   if (loading) {
     return (
@@ -362,7 +366,11 @@ const SellingProductPage: React.FC = () => {
                           ? "bg-red-600 hover:bg-red-500"
                           : "bg-purple-600 hover:bg-purple-500"
                       } text-white focus:outline-none focus:bg-purple-500 group`}
-                      title={isFavorite(product.id) ? "Remove from Favorites" : "Add to Favorites"}
+                      title={
+                        isFavorite(product.id)
+                          ? "Remove from Favorites"
+                          : "Add to Favorites"
+                      }
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

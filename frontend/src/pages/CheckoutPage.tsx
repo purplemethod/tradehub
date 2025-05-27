@@ -131,19 +131,12 @@ const CheckoutPage: React.FC = () => {
 
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneNumberRegex = /^\+?[\d\s-]{10,}$/;
     const zipCodeRegex = /^\d{5}-?\d{3}$/;
 
     // Common fields validation
     if (!formData.fullName.trim()) {
       errors.fullName = t("checkout.validation.fullNameRequired");
-    }
-
-    if (!formData.email.trim()) {
-      errors.email = t("checkout.validation.emailRequired");
-    } else if (!emailRegex.test(formData.email)) {
-      errors.email = t("checkout.validation.emailInvalid");
     }
 
     if (!formData.phoneNumber.trim()) {
@@ -225,8 +218,13 @@ const CheckoutPage: React.FC = () => {
     }
 
     if (!validateForm()) {
-      const firstError = Object.values(formErrors)[0];
-      showNotification(firstError, "error");
+      // Get the first error message that exists
+      const firstErrorKey = Object.keys(formErrors).find(key => formErrors[key]);
+      if (firstErrorKey) {
+        showNotification(formErrors[firstErrorKey], "error");
+      } else {
+        showNotification(t("checkout.notifications.validationError"), "error");
+      }
       return;
     }
 
@@ -446,7 +444,7 @@ const CheckoutPage: React.FC = () => {
         })),
         shippingInfo: {
           fullName: formData.fullName,
-          email: formData.email,
+          email: user.email,
           phoneNumber: formData.phoneNumber,
           address: formData.address,
           city: formData.city,
@@ -778,17 +776,11 @@ const CheckoutPage: React.FC = () => {
                     type="email"
                     id="email"
                     name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={`mt-1 block w-full rounded-md shadow-sm ${
-                      formErrors.email ? "border-red-300" : "border-gray-300"
-                    }`}
+                    value={user?.email || ""}
+                    readOnly
+                    disabled
+                    className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 border-gray-300"
                   />
-                  {formErrors.email && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {formErrors.email}
-                    </p>
-                  )}
                 </div>
 
                 <div>
