@@ -356,7 +356,7 @@ const SellingProductPage: React.FC = () => {
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-                    {product.condition}
+                    {t(`products.conditions.${product.condition}`)}
                   </p>
                   <div className="flex justify-end gap-2 mt-4">
                     <button

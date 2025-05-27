@@ -291,12 +291,12 @@ const ProductDetailPage: React.FC = () => {
 
           <div className="mt-6">
             <div className="flex items-center">
-              <h3 className="text-sm font-medium text-gray-900">Condition:</h3>
-              <p className="ml-2 text-sm text-gray-500">{product.condition}</p>
+              <h3 className="text-sm font-medium text-gray-900">{t("products.condition")}:</h3>
+              <p className="ml-2 text-sm text-gray-500">{t(`products.conditions.${product.condition}`)}</p>
             </div>
             <div className="flex items-center mt-2">
-              <h3 className="text-sm font-medium text-gray-900">Category:</h3>
-              <p className="ml-2 text-sm text-gray-500">{product.category}</p>
+              <h3 className="text-sm font-medium text-gray-900">{t("products.category")}:</h3>
+              <p className="ml-2 text-sm text-gray-500">{t(`products.categories.${product.category}`)}</p>
             </div>
             <div className="flex items-center mt-2">
               <h3 className="text-sm font-medium text-gray-900">Stock:</h3>
