@@ -378,7 +378,7 @@ const SellingProductPage: React.FC = () => {
                   {product.weight && (
                     <p className="text-sm text-gray-500">
                       {t("products.weight")}: {product.weight}
-                    </p>
+                  </p>
                   )}
                   <div className="flex justify-end gap-2 mt-4">
                     <button

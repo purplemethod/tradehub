@@ -363,7 +363,7 @@ const CheckoutPage: React.FC = () => {
       return pixData;
     } catch (error) {
       console.error("Error in checkout process:", error);
-      showNotification(t("checkout.notifications.paymentError"), "error");
+        showNotification(t("checkout.notifications.paymentError"), "error");
       setCountdown(null); // Reset countdown on error
     } finally {
       setIsProcessing(false);
@@ -516,10 +516,10 @@ const CheckoutPage: React.FC = () => {
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
         ...(formData.paymentMethod === 'pix' ? {
-          pixPayment: {
-            pixPayload: pixPayload,
-            pixKey: pixKey,
-            expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        pixPayment: {
+          pixPayload: pixPayload,
+          pixKey: pixKey,
+          expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
           }
         } : {
           installmentPayment: {
@@ -626,12 +626,12 @@ const CheckoutPage: React.FC = () => {
       }, 1000);
     } else if (countdown === 0) {
       // Clear basket and refresh products just before navigation
-      clearBasket();
+              clearBasket();
       if (productContext?.refreshProducts) {
         productContext.refreshProducts();
       }
       navigate("/my-purchases");
-    }
+            }
 
     return () => {
       if (timer) {
@@ -680,7 +680,7 @@ const CheckoutPage: React.FC = () => {
         setDiscount(0);
         setAppliedCouponRef(null);
         return;
-      }
+    }
 
       // Check if coupon has reached maximum uses
       if (couponData.maxUses && couponData.currentUses && couponData.currentUses >= couponData.maxUses) {
@@ -715,7 +715,7 @@ const CheckoutPage: React.FC = () => {
           discountAmount = (eligibleTotal * couponData.discountValue) / 100;
         } else {
           discountAmount = couponData.discountValue;
-        }
+            }
       } else {
         // Generic coupon
         if (couponData.discountType === "percentage") {
@@ -989,108 +989,108 @@ const CheckoutPage: React.FC = () => {
                 {/* PIX Payment Section */}
                 {formData.paymentMethod === 'pix' && (
                   <>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    {t("checkout.pixDescription")}
+                  </p>
+                </div>
+
+                {!pixPaymentData ? (
+                  <div>
+                    <div className="bg-gray-50 p-4 rounded-lg mb-4">
                       <p className="text-sm text-gray-600">
-                        {t("checkout.pixDescription")}
+                        {t("checkout.pixInstructions")}
                       </p>
                     </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="bg-white p-6 rounded-lg border border-gray-200">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">
+                        {t("checkout.pixPayment")}
+                      </h3>
 
-                    {!pixPaymentData ? (
-                      <div>
-                        <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                          <p className="text-sm text-gray-600">
-                            {t("checkout.pixInstructions")}
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="bg-white p-6 rounded-lg border border-gray-200">
-                          <h3 className="text-lg font-medium text-gray-900 mb-4">
-                            {t("checkout.pixPayment")}
-                          </h3>
-
-                          <div className="flex flex-col items-center justify-center mb-4">
-                            {pixPaymentData && (
-                              <div className="bg-white p-4 rounded-lg border border-gray-200 flex flex-col items-center">
-                                <div className="w-[200px] h-[200px] flex items-center justify-center">
-                                  <QRCodeSVG
-                                    value={pixPaymentData.pixPayload}
-                                    size={200}
-                                    level="H"
-                                    includeMargin={true}
-                                  />
-                                </div>
-                                <div className="mt-4 text-center">
-                                  <p className="text-sm text-gray-600">
-                                    {t("checkout.scanQRCode")}
-                                  </p>
-                                  <p className="text-sm text-gray-600 mt-2">
-                                    {t("checkout.copyPixKey")}:{" "}
-                                    {pixPaymentData.pixKey}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="space-y-2 text-center">
-                            <p className="text-sm text-gray-600">
-                              {t("checkout.pixKey")}: {pixPaymentData.pixKey}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {t("checkout.amount")}: R${" "}
-                              {pixPaymentData.amount.toFixed(2)}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {t("checkout.expiresAt")}:{" "}
-                              {new Date(
-                                pixPaymentData.expiresAt
-                              ).toLocaleTimeString()}
-                            </p>
-                          </div>
-
-                          <div className="mt-4">
-                            <div className="flex items-center justify-center space-x-2">
-                              <div
-                                className={`h-2 w-2 rounded-full ${
-                                  pixPaymentData.status === "paid"
-                                    ? "bg-green-500"
-                                    : pixPaymentData.status === "expired"
-                                    ? "bg-red-500"
-                                    : "bg-yellow-500"
-                                }`}
-                              ></div>
+                      <div className="flex flex-col items-center justify-center mb-4">
+                        {pixPaymentData && (
+                          <div className="bg-white p-4 rounded-lg border border-gray-200 flex flex-col items-center">
+                            <div className="w-[200px] h-[200px] flex items-center justify-center">
+                              <QRCodeSVG
+                                value={pixPaymentData.pixPayload}
+                                size={200}
+                                level="H"
+                                includeMargin={true}
+                              />
+                            </div>
+                            <div className="mt-4 text-center">
                               <p className="text-sm text-gray-600">
-                                {pixPaymentData.status === "paid"
-                                  ? t("checkout.paymentConfirmed")
-                                  : pixPaymentData.status === "expired"
-                                  ? t("checkout.paymentExpired")
-                                  : t("checkout.waitingPayment")}
+                                {t("checkout.scanQRCode")}
+                              </p>
+                              <p className="text-sm text-gray-600 mt-2">
+                                {t("checkout.copyPixKey")}:{" "}
+                                {pixPaymentData.pixKey}
                               </p>
                             </div>
                           </div>
-                        </div>
-
-                        {pixPaymentData.status === "expired" && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              generatePixPayment({
-                                orderId: pixPaymentData.orderId,
-                                userId: user!.id,
-                                sellerId: basketItems[0]?.product.owner || "",
-                                amount: total,
-                                transactionId: pixPaymentData.transactionId!,
-                              })
-                            }
-                            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            {t("checkout.generateNewQRCode")}
-                          </button>
                         )}
                       </div>
+
+                      <div className="space-y-2 text-center">
+                        <p className="text-sm text-gray-600">
+                          {t("checkout.pixKey")}: {pixPaymentData.pixKey}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {t("checkout.amount")}: R${" "}
+                          {pixPaymentData.amount.toFixed(2)}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {t("checkout.expiresAt")}:{" "}
+                          {new Date(
+                            pixPaymentData.expiresAt
+                          ).toLocaleTimeString()}
+                        </p>
+                      </div>
+
+                      <div className="mt-4">
+                        <div className="flex items-center justify-center space-x-2">
+                          <div
+                            className={`h-2 w-2 rounded-full ${
+                              pixPaymentData.status === "paid"
+                                ? "bg-green-500"
+                                : pixPaymentData.status === "expired"
+                                ? "bg-red-500"
+                                : "bg-yellow-500"
+                            }`}
+                          ></div>
+                          <p className="text-sm text-gray-600">
+                            {pixPaymentData.status === "paid"
+                              ? t("checkout.paymentConfirmed")
+                              : pixPaymentData.status === "expired"
+                              ? t("checkout.paymentExpired")
+                              : t("checkout.waitingPayment")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {pixPaymentData.status === "expired" && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          generatePixPayment({
+                            orderId: pixPaymentData.orderId,
+                            userId: user!.id,
+                            sellerId: basketItems[0]?.product.owner || "",
+                            amount: total,
+                            transactionId: pixPaymentData.transactionId!,
+                          })
+                        }
+                        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        {t("checkout.generateNewQRCode")}
+                      </button>
                     )}
+                  </div>
+                )}
                   </>
                 )}
 
@@ -1113,7 +1113,7 @@ const CheckoutPage: React.FC = () => {
                         onChange={handleInputChange}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                       >
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => (
+                        {Array.from({ length: Math.min(10, Math.max(...basketItems.map(item => item.product.allowInstallments ? (item.product.maxInstallments || 10) : 1))) }, (_, i) => i + 1).map((num) => (
                           <option key={num} value={num}>
                             {num}x {t("checkout.installments")} - R${(total / num).toFixed(2)}
                           </option>
