@@ -102,15 +102,17 @@ const NewProductPage: React.FC = () => {
   }, [loading]);
 
   useEffect(() => {
-    document.addEventListener('paste', handlePaste);
-    return () => document.removeEventListener('paste', handlePaste);
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
   }, [mediaItems.length, showNotification, t]);
 
   const handlePaste = async (e: ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
 
-    const imageItems = Array.from(items).filter(item => item.type.startsWith('image/'));
+    const imageItems = Array.from(items).filter((item) =>
+      item.type.startsWith("image/")
+    );
     if (imageItems.length === 0) return;
 
     if (mediaItems.length + imageItems.length > 5) {
@@ -128,12 +130,12 @@ const NewProductPage: React.FC = () => {
         const thumbnailBlob = await createThumbnail(file, 200);
         const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
         const dimensions = await getImageDimensions(file);
-        
+
         newProductImages.push({
           file,
           thumbnailUrl: thumbnailDataUrl,
           fileInfo: {
-            name: file.name || 'pasted-image.png',
+            name: file.name || "pasted-image.png",
             type: file.type,
             size: formatFileSize(file.size),
             estimatedChunks: calculateEstimatedChunks(file.size),
@@ -147,7 +149,7 @@ const NewProductPage: React.FC = () => {
     }
 
     if (newProductImages.length > 0) {
-      setMediaItems(prev => [...prev, ...newProductImages]);
+      setMediaItems((prev) => [...prev, ...newProductImages]);
       showNotification(t("products.notifications.imagesPasted"), "success");
     }
   };
@@ -297,7 +299,9 @@ const NewProductPage: React.FC = () => {
     cameraInputRef.current?.click();
   };
 
-  const handleCameraChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCameraChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = event.target.files;
     if (!files) return;
 
@@ -322,7 +326,7 @@ const NewProductPage: React.FC = () => {
         const thumbnailBlob = await createThumbnail(file, 200);
         const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
         const dimensions = await getImageDimensions(file);
-        
+
         newProductImages.push({
           file,
           thumbnailUrl: thumbnailDataUrl,
@@ -341,7 +345,9 @@ const NewProductPage: React.FC = () => {
     setMediaItems((prev) => [...prev, ...newProductImages]);
   };
 
-  const handleGalleryChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGalleryChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = event.target.files;
     if (!files) return;
 
@@ -366,7 +372,7 @@ const NewProductPage: React.FC = () => {
         const thumbnailBlob = await createThumbnail(file, 200);
         const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
         const dimensions = await getImageDimensions(file);
-        
+
         newProductImages.push({
           file,
           thumbnailUrl: thumbnailDataUrl,
@@ -404,7 +410,9 @@ const NewProductPage: React.FC = () => {
 
   const isMobile = () => {
     const userAgent = navigator.userAgent || navigator.vendor || "";
-    return /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    return /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+      userAgent
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -507,7 +515,6 @@ const NewProductPage: React.FC = () => {
         imageMetadataRef: imagesMetadata,
         status: "draft",
       };
-      console.log("Before saving product:", productData);
 
       // Save Product
       await setDoc(productRef, productData);
@@ -658,8 +665,12 @@ const NewProductPage: React.FC = () => {
               }`}
             >
               <option value="">{t("products.selectCategory")}</option>
-              <option value="electronics">{t("products.categories.electronics")}</option>
-              <option value="clothing">{t("products.categories.clothing")}</option>
+              <option value="electronics">
+                {t("products.categories.electronics")}
+              </option>
+              <option value="clothing">
+                {t("products.categories.clothing")}
+              </option>
               <option value="books">{t("products.categories.books")}</option>
               <option value="home">{t("products.categories.home")}</option>
               <option value="sports">{t("products.categories.sports")}</option>
@@ -687,9 +698,13 @@ const NewProductPage: React.FC = () => {
               }`}
             >
               <option value="">{t("products.selectCondition")}</option>
-              <option value="new_sealed">{t("products.conditions.new_sealed")}</option>
+              <option value="new_sealed">
+                {t("products.conditions.new_sealed")}
+              </option>
               <option value="new">{t("products.conditions.new")}</option>
-              <option value="like_new">{t("products.conditions.like_new")}</option>
+              <option value="like_new">
+                {t("products.conditions.like_new")}
+              </option>
               <option value="good">{t("products.conditions.good")}</option>
               <option value="fair">{t("products.conditions.fair")}</option>
               <option value="poor">{t("products.conditions.poor")}</option>
@@ -750,7 +765,11 @@ const NewProductPage: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t("products.newProduct.uploadImages")}
             </label>
-            <div className={`flex gap-2 mb-4 ${errors.images ? 'border-2 border-red-500 rounded-md p-4' : ''}`}>
+            <div
+              className={`flex gap-2 mb-4 ${
+                errors.images ? "border-2 border-red-500 rounded-md p-4" : ""
+              }`}
+            >
               {isMobile() && (
                 <button
                   type="button"
@@ -773,14 +792,19 @@ const NewProductPage: React.FC = () => {
                 onClick={() => {
                   // Focus on the document to enable paste
                   document.body.focus();
-                  showNotification(t("products.notifications.pasteImage"), "info");
+                  showNotification(
+                    t("products.notifications.pasteImage"),
+                    "info"
+                  );
                 }}
               >
                 {t("products.newProduct.pasteImage")}
               </button>
             </div>
             {errors.images && (
-              <p className="mt-1 text-sm text-red-600 font-medium">{errors.images}</p>
+              <p className="mt-1 text-sm text-red-600 font-medium">
+                {errors.images}
+              </p>
             )}
 
             <div className="mb-4">

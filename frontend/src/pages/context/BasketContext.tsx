@@ -27,7 +27,9 @@ export const BasketContext = createContext<BasketContextType | undefined>(
 const BASE_STORAGE_KEY = "tradehub_basket";
 
 // Helper function to safely parse JSON
-const safeJSONParse = (data: string | null): Array<{ product: Product; stock: number }> | null => {
+const safeJSONParse = (
+  data: string | null
+): Array<{ product: Product; stock: number }> | null => {
   try {
     return data ? JSON.parse(data) : null;
   } catch (error) {
@@ -41,7 +43,9 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { t } = useTranslation();
   const { user } = useContext(UserContext)!;
-  const [basketItems, setBasketItems] = useState<Array<{ product: Product; stock: number }>>([]);
+  const [basketItems, setBasketItems] = useState<
+    Array<{ product: Product; stock: number }>
+  >([]);
 
   // Load basket when user changes
   useEffect(() => {
@@ -109,7 +113,7 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
         const existingItem = prevItems.find(
           (item) => item.product.id === product.id
         );
-        
+
         if (existingItem) {
           // Check if adding one more would exceed stock
           if (existingItem.stock + 1 > product.stock) {
@@ -122,18 +126,18 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
               : item
           );
         }
-        
+
         // For new items, check if there's stock available
         if (product.stock < 1) {
           return prevItems;
         }
-        
+
         updated = true;
         return [...prevItems, { product, stock: 1 }];
       });
 
       // Wait for state update to complete
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       if (!updated) {
         return { success: false, reason: t("products.errors.maxStockReached") };

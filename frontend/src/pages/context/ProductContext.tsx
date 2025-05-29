@@ -59,6 +59,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({
             freeShipping: productData.freeShipping,
             status: productData.status,
             allowInstallments: productData.allowInstallments || false,
+            maxInstallments: productData.maxInstallments || 1,
+            minInstallmentValue: productData.minInstallmentValue || 500,
             voltage: productData.voltage || undefined,
           };
 

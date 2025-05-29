@@ -65,7 +65,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({
   useEffect(() => {
     if (type === "youtube") return;
     let isMounted = true;
-    let loadingTimeout: number;
+    let loadingTimeout: ReturnType<typeof setTimeout>;
     let retryCount = 0;
     const MAX_RETRIES = 3;
 

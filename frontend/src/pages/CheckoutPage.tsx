@@ -1113,15 +1113,39 @@ const CheckoutPage: React.FC = () => {
                         onChange={handleInputChange}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                       >
-                        {Array.from({ length: Math.min(10, Math.max(...basketItems.map(item => item.product.allowInstallments ? (item.product.maxInstallments || 10) : 1))) }, (_, i) => i + 1).map((num) => (
-                          <option key={num} value={num}>
-                            {num}x {t("checkout.installments")} - R${(total / num).toFixed(2)}
-                          </option>
-                        ))}
+                        {(() => {
+                          const maxAllowedInstallments = Math.min(
+                            10,
+                            Math.max(
+                              ...basketItems.map(item => 
+                                item.product.allowInstallments ? (item.product.maxInstallments || 1) : 1
+                              )
+                            )
+                          );
+                          return Array.from({ length: maxAllowedInstallments }, (_, i) => i + 1).map((num) => {
+                            let installmentValue = total / num;
+                            let displayTotal = total;
+                            
+                            // Add 2% interest for installments beyond 5x
+                            if (num > 6) {
+                              const interestRate = 0.02;
+                              displayTotal = total * (1 + interestRate);
+                              installmentValue = displayTotal / num;
+                            }
+
+                            return (
+                              <option key={num} value={num}>
+                                {num}x {t("checkout.installments")} - R${installmentValue.toFixed(2)} ({t("checkout.installmentTotal")}: R${displayTotal.toFixed(2)})
+                                {num > 6 && ` (+2% ${t("checkout.interest")})`}
+                              </option>
+                            );
+                          });
+                        })()}
                       </select>
                       <p className="text-sm text-gray-500">
                         {t("checkout.installmentTotal")}: R${total.toFixed(2)}
                       </p>
+
                     </div>
                   </div>
                 )}

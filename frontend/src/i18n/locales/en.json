@@ -119,6 +119,7 @@
     "installmentValue": "Installment value",
     "totalWithInstallments": "Total with installments",
     "installmentTotal": "Total amount",
+    "interest": "interest",
     "validation": {
       "couponRequired": "Please enter a coupon code",
       "invalidCoupon": "Invalid coupon code",
@@ -435,7 +436,9 @@
       "shipped": "Shipped",
       "delivered": "Delivered",
       "cancelled": "Cancelled"
-    }
+    },
+    "paymentMethod": "Payment Method",
+    "installmentInfo": "Installment {{current}} of {{total}} - ${{value}} per installment. Next payment: {{next}}"
   },
   "profile": {
     "title": "Profile",

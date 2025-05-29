@@ -33,10 +33,18 @@ interface Order {
   status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
   createdAt: string;
   paidAt?: string;
+  paymentMethod: 'pix' | 'installment';
   pixPayment?: {
     pixPayload: string;
     pixKey: string;
     expiresAt: string;
+  };
+  installmentPayment?: {
+    installments: number;
+    installmentValue: number;
+    nextPaymentDate: string;
+    remainingInstallments: number;
+    paidInstallments: number;
   };
 }
 
@@ -149,6 +157,17 @@ const MyPurchasesPage: React.FC = () => {
                 <span className="font-medium">{t('orders.total')}</span>
                 <span className="font-bold">${order.total.toFixed(2)}</span>
               </div>
+              {order.paymentMethod === 'installment' && order.installmentPayment && (
+                <div className="mt-2 text-sm text-gray-600">
+                  <p>{t('orders.paymentMethod')}: {t('checkout.installments')}</p>
+                  <p>{t('orders.installmentInfo', {
+                    current: order.installmentPayment.paidInstallments,
+                    total: order.installmentPayment.installments,
+                    value: order.installmentPayment.installmentValue.toFixed(2),
+                    next: new Date(order.installmentPayment.nextPaymentDate).toLocaleDateString()
+                  })}</p>
+                </div>
+              )}
             </div>
 
             {order.status === 'pending' && order.pixPayment && (

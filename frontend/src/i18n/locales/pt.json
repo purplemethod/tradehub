@@ -155,7 +155,8 @@
     "selectInstallments": "Selecione o número de parcelas",
     "installmentValue": "Valor da parcela",
     "totalWithInstallments": "Total com parcelamento",
-    "installmentTotal": "Valor total"
+    "installmentTotal": "Valor total",
+    "interest": "juros"
   },
   "products": {
     "title": "Produtos",
@@ -432,7 +433,9 @@
       "shipped": "Enviado",
       "delivered": "Entregue",
       "cancelled": "Cancelado"
-    }
+    },
+    "paymentMethod": "Forma de Pagamento",
+    "installmentInfo": "Parcela {{current}} de {{total}} - R${{value}} por parcela. Próximo pagamento: {{next}}"
   },
   "profile": {
     "title": "Perfil",
