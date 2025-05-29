@@ -19,6 +19,10 @@ export interface Product {
   shippingCost?: number;
   freeShipping?: boolean;
   status?: "active" | "inactive" | "draft";
+  voltage?: string;
+  allowInstallments?: boolean;
+  minInstallmentValue?: number;
+  maxInstallments?: number;
 }
 
 export interface ImageMetadata {
@@ -57,7 +61,7 @@ export interface UserProfile {
   role: UserRole | null;
   createdAt: Date;
   updatedAt: Date;
-}
+} 
 
 export enum UserRole {
   ADMIN = 'ADMIN',

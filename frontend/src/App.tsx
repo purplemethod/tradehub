@@ -21,6 +21,7 @@ import { FavoritesProvider } from "./pages/context/FavoritesContext";
 import MyFavoritesPage from "./pages/MyFavoritesPage";
 import { useUserRole } from "./hooks/useUserRole";
 import AuthGuard from "./pages/components/AuthGuard";
+import CouponManagementPage from "./pages/admin/CouponManagementPage";
 
 const AppContent: React.FC = () => {
   const { isAdmin, canManageProducts } = useUserRole();
@@ -104,6 +105,14 @@ const AppContent: React.FC = () => {
             }
           />
           <Route path="/" element={<Navigate to="/home" />} />
+          <Route
+            path="/admin/coupons"
+            element={
+              <AuthGuard requiredPermission={isAdmin}>
+                <CouponManagementPage />
+              </AuthGuard>
+            }
+          />
         </Routes>
       </main>
       <NotificationContainer />

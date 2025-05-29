@@ -227,6 +227,13 @@ const SellingProductPage: React.FC = () => {
                 className="bg-white overflow-hidden shadow rounded-lg"
               >
                 <div className="relative h-48">
+                  {product.stock === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
+                      <span className="text-white text-2xl font-bold transform -rotate-45 border-4 border-white px-8 py-2">
+                        SOLD
+                      </span>
+                    </div>
+                  )}
                   <img
                     src={
                       images[productImageIndices[product.id] || 0]
@@ -358,6 +365,21 @@ const SellingProductPage: React.FC = () => {
                   <p className="mt-1 text-sm text-gray-500 line-clamp-2">
                     {t(`products.conditions.${product.condition}`)}
                   </p>
+                  {product.brand && (
+                    <p className="text-sm text-gray-500">
+                      {t("products.brand")}: {product.brand}
+                    </p>
+                  )}
+                  {product.voltage && (
+                    <p className="text-sm text-gray-500">
+                      {t("products.voltage")}: {product.voltage}
+                    </p>
+                  )}
+                  {product.weight && (
+                    <p className="text-sm text-gray-500">
+                      {t("products.weight")}: {product.weight}
+                    </p>
+                  )}
                   <div className="flex justify-end gap-2 mt-4">
                     <button
                       onClick={() => handleAddToFavorites(product)}

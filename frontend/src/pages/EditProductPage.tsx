@@ -45,7 +45,11 @@ const EditProductPage: React.FC = () => {
     dimensions: "",
     shippingCost: "",
     freeShipping: false,
+    voltage: "",
     status: "active" as "active" | "inactive" | "draft",
+    allowInstallments: false,
+    minInstallmentValue: 500,
+    maxInstallments: 10,
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -104,6 +108,7 @@ const EditProductPage: React.FC = () => {
     if (!productId || productsLoading) return;
 
     const foundProduct = products.find((p) => p.id === productId);
+    console.log("foundProduct", foundProduct);
 
     if (foundProduct) {
       const productData: Product = {
@@ -138,7 +143,11 @@ const EditProductPage: React.FC = () => {
         dimensions: foundProduct.dimensions || "",
         shippingCost: foundProduct.shippingCost?.toString() || "0",
         freeShipping: foundProduct.freeShipping || false,
+        voltage: foundProduct.voltage || "",
         status: foundProduct.status || "active",
+        allowInstallments: foundProduct.allowInstallments || false,
+        minInstallmentValue: foundProduct.minInstallmentValue || 500,
+        maxInstallments: foundProduct.maxInstallments || 10,
       });
       setPreviewUrls(
         foundProduct.imageMetadataRef
@@ -408,6 +417,7 @@ const EditProductPage: React.FC = () => {
         dimensions: formData.dimensions || "",
         shippingCost: Number(formData.shippingCost) || 0,
         freeShipping: Boolean(formData.freeShipping),
+        voltage: formData.voltage || "",
         status: formData.status,
         imageMetadataRef: newImageMetadata.map((img) => ({
           type: img.type,
@@ -417,8 +427,12 @@ const EditProductPage: React.FC = () => {
           videoUrl: img.videoUrl || null,
         })),
         updatedAt: new Date(),
+        allowInstallments: Boolean(formData.allowInstallments),
+        minInstallmentValue: Number(formData.minInstallmentValue) || 500,
+        maxInstallments: Number(formData.maxInstallments) || 10,
       };
 
+      console.log("Before saving product:", updatedProduct);
       const productRef = doc(firestoreDB, "products", productId!);
       await updateDoc(productRef, updatedProduct);
 
@@ -536,6 +550,7 @@ const EditProductPage: React.FC = () => {
                 }`}
               >
                 <option value="">{t("products.selectCondition")}</option>
+                <option value="new_sealed">{t("products.conditions.new_sealed")}</option>
                 <option value="new">{t("products.conditions.new")}</option>
                 <option value="like_new">{t("products.conditions.like_new")}</option>
                 <option value="good">{t("products.conditions.good")}</option>
@@ -560,6 +575,24 @@ const EditProductPage: React.FC = () => {
                 name="brand"
                 value={formData.brand}
                 onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md shadow-sm border-gray-300"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="voltage"
+                className="block text-sm font-medium text-gray-700"
+              >
+                {t("products.newProduct.voltage")}
+              </label>
+              <input
+                type="text"
+                id="voltage"
+                name="voltage"
+                value={formData.voltage}
+                onChange={handleInputChange}
+                placeholder="e.g., 110V, 220V"
                 className="mt-1 block w-full rounded-md shadow-sm border-gray-300"
               />
             </div>
@@ -885,6 +918,36 @@ const EditProductPage: React.FC = () => {
               <option value="inactive">{t("products.statusInactive")}</option>
               <option value="draft">{t("products.statusDraft")}</option>
             </select>
+          </div>
+        </div>
+
+        {/* Installments */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-lg font-semibold mb-4">
+            {t("checkout.installments")}
+          </h2>
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="allowInstallments"
+                name="allowInstallments"
+                checked={formData.allowInstallments}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="allowInstallments"
+                className="ml-2 block text-sm text-gray-700"
+              >
+                {t("checkout.installmentsInfo")}
+              </label>
+            </div>
+            {formData.allowInstallments && (
+              <div className="mt-2 text-sm text-gray-500">
+                <p>{t("checkout.minInstallmentValue")}</p>
+              </div>
+            )}
           </div>
         </div>
 

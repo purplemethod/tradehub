@@ -9,13 +9,13 @@ import {
   collection,
   addDoc,
   doc,
-  runTransaction,
-  onSnapshot,
   updateDoc,
   getDoc,
   query,
   where,
   getDocs,
+  Timestamp,
+  DocumentReference,
 } from "firebase/firestore";
 import { firestoreDB } from "./utils/FirebaseConfig";
 import { QRCodeSVG } from "qrcode.react";
@@ -41,6 +41,10 @@ interface FormData {
   zipCode: string;
   // PIX fields
   pixKey: string;
+  couponCode: string;
+  // Installment fields
+  paymentMethod: 'pix' | 'installment';
+  installments: number;
 }
 
 interface FormErrors {
@@ -63,6 +67,55 @@ interface PixPaymentData {
   errorMessage?: string;
 }
 
+interface Coupon {
+  code: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  isActive: boolean;
+  expiresAt?: Timestamp;
+  minimumPurchase?: number;
+  productIds?: string[]; // Array of product IDs this coupon applies to
+  maxUses?: number;
+  currentUses?: number;
+}
+
+interface OrderData {
+  userId: string;
+  items: {
+    productId: string;
+    name: string;
+    stock: number;
+    price: number;
+    total: number;
+  }[];
+  shippingInfo: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
+  paymentMethod: 'pix' | 'installment';
+  total: number;
+  status: string;
+  createdAt: string;
+  expiresAt: string;
+  pixPayment?: {
+    pixPayload: string;
+    pixKey: string;
+    expiresAt: string;
+  };
+  installmentPayment?: {
+    installments: number;
+    installmentValue: number;
+    nextPaymentDate: string;
+    remainingInstallments: number;
+    paidInstallments: number;
+  };
+}
+
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   const { basketItems, clearBasket } = useBasket();
@@ -75,6 +128,9 @@ const CheckoutPage: React.FC = () => {
   );
   const { t } = useTranslation();
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [discount, setDiscount] = useState<number>(0);
+  const [couponError, setCouponError] = useState<string>("");
+  const [appliedCouponRef, setAppliedCouponRef] = useState<DocumentReference | null>(null);
 
   // Fetch user data from Firestore
   useEffect(() => {
@@ -119,6 +175,10 @@ const CheckoutPage: React.FC = () => {
     zipCode: "",
     // PIX fields
     pixKey: import.meta.env.VITE_PIX_KEY || "",
+    couponCode: "",
+    // Installment fields
+    paymentMethod: 'pix',
+    installments: 1,
   });
 
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -127,7 +187,7 @@ const CheckoutPage: React.FC = () => {
   const total = basketItems.reduce(
     (sum, item) => sum + item.product.price * item.stock,
     0
-  );
+  ) - discount;
 
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
@@ -235,8 +295,36 @@ const CheckoutPage: React.FC = () => {
 
     try {
       setIsProcessing(true);
-      setCountdown(20); // Start the countdown
-      showNotification(t("checkout.notifications.processing"), "info");
+      showNotification(t("checkout.notifications.processingOrder"), "info");
+
+      // Check product availability and stock before proceeding
+      for (const item of basketItems) {
+        const productRef = doc(firestoreDB, "products", item.product.id);
+        const productDoc = await getDoc(productRef);
+
+        if (!productDoc.exists()) {
+          showNotification(
+            t("checkout.notifications.productNotFound", { name: item.product.name }),
+            "error"
+          );
+          setIsProcessing(false);
+          return;
+        }
+
+        const currentStock = productDoc.data().stock;
+        if (currentStock < item.stock) {
+          showNotification(
+            t("checkout.notifications.insufficientStock", {
+              name: item.product.name,
+              available: currentStock,
+              requested: item.stock
+            }),
+            "error"
+          );
+          setIsProcessing(false);
+          return;
+        }
+      }
 
       // Update user data in Firestore with the latest information
       const userRef = doc(firestoreDB, "users", user.id);
@@ -247,25 +335,6 @@ const CheckoutPage: React.FC = () => {
         state: formData.state,
         zipCode: formData.zipCode,
       });
-
-      // Update product stock quantities
-      for (const item of basketItems) {
-        const productRef = doc(firestoreDB, "products", item.product.id);
-        const productDoc = await getDoc(productRef);
-
-        if (!productDoc.exists()) {
-          throw new Error(`Product ${item.product.id} not found`);
-        }
-
-        const currentStock = productDoc.data().stock;
-        const newStock = currentStock - item.stock;
-
-        if (newStock < 0) {
-          throw new Error("insufficient_stock");
-        }
-
-        await updateDoc(productRef, { stock: newStock });
-      }
 
       // Generate PIX payment
       const pixData = await generatePixPayment({
@@ -281,23 +350,20 @@ const CheckoutPage: React.FC = () => {
       }
 
       setPixPaymentData(pixData);
-      showNotification("QR Code PIX gerado com sucesso!", "success");
+      
+      // Show success notification for 3 seconds then redirect
+      setTimeout(() => {
+        clearBasket();
+        if (productContext?.refreshProducts) {
+          productContext.refreshProducts();
+        }
+        navigate("/my-purchases");
+      }, 3000);
 
-      // Start polling for payment status
-      startPaymentStatusPolling(pixData.transactionId!);
+      return pixData;
     } catch (error) {
       console.error("Error in checkout process:", error);
-
-      // Handle specific error cases
-      if (error instanceof Error && error.message === "insufficient_stock") {
-        showNotification(
-          t("checkout.notifications.insufficientStock"),
-          "error"
-        );
-      } else {
-        showNotification(t("checkout.notifications.paymentError"), "error");
-      }
-
+      showNotification(t("checkout.notifications.paymentError"), "error");
       setCountdown(null); // Reset countdown on error
     } finally {
       setIsProcessing(false);
@@ -398,11 +464,7 @@ const CheckoutPage: React.FC = () => {
     transactionId: string;
   }): Promise<PixPaymentData> => {
     if (!user) {
-      showNotification(
-        "Você precisa estar logado para fazer um pedido",
-        "error"
-      );
-      return Promise.reject(new Error("User not logged in"));
+      throw new Error("User not logged in");
     }
 
     try {
@@ -413,27 +475,24 @@ const CheckoutPage: React.FC = () => {
       const pixKeyType = import.meta.env.VITE_PIX_KEY_TYPE;
 
       if (!pixKey || !pixKeyType) {
-        showNotification("Missing required PIX configuration", "error");
-        return Promise.reject(new Error("Missing PIX configuration"));
+        throw new Error("Missing PIX configuration");
       }
 
       // Validate PIX key format
       if (!validatePixKey(pixKey, pixKeyType)) {
-        showNotification("Invalid PIX key format", "error");
-        return Promise.reject(new Error("Invalid PIX key format"));
+        throw new Error("Invalid PIX key format");
       }
 
       // Generate PIX payload
       let pixPayload;
       try {
         pixPayload = generatePixPayload();
-      } catch (error) {
-        showNotification("Failed to generate PIX payload" + error, "error");
-        return Promise.reject(new Error("Failed to generate PIX payload"));
+      } catch {
+        throw new Error("Failed to generate PIX payload");
       }
 
       // Create order in Firestore
-      const orderData = {
+      const orderData: OrderData = {
         userId: user.id,
         items: basketItems.map((item) => ({
           productId: item.product.id,
@@ -451,37 +510,78 @@ const CheckoutPage: React.FC = () => {
           state: formData.state,
           zipCode: formData.zipCode,
         },
-        paymentMethod: "pix",
+        paymentMethod: formData.paymentMethod,
         total: data.amount,
         status: "pending",
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-        pixPayment: {
-          pixPayload: pixPayload,
-          pixKey: pixKey,
-          expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-        },
+        ...(formData.paymentMethod === 'pix' ? {
+          pixPayment: {
+            pixPayload: pixPayload,
+            pixKey: pixKey,
+            expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+          }
+        } : {
+          installmentPayment: {
+            installments: formData.installments,
+            installmentValue: total / formData.installments,
+            nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+            remainingInstallments: formData.installments,
+            paidInstallments: 0,
+          }
+        }),
       };
 
       let orderRef;
       try {
         orderRef = await addDoc(collection(firestoreDB, "orders"), orderData);
       } catch (error) {
-        showNotification("Failed to create order" + error, "error");
-        return Promise.reject(new Error("Failed to create order"));
+        console.error("Error creating order:", error);
+        throw new Error("Failed to create order");
       }
 
-      if (!orderRef) {
-        showNotification("Failed to create order", "error");
-        return Promise.reject(new Error("Failed to create order"));
+      // Update order with PIX payment data if applicable
+      if (formData.paymentMethod === 'pix') {
+        await updateDoc(orderRef, {
+          pixPayment: {
+            ...orderData.pixPayment,
+            orderId: orderRef.id,
+          },
+        });
       }
 
-      // Create PIX payment data
-      const pixData: PixPaymentData = {
-        id: orderRef.id, // Use order ID as payment ID
+      // Update product stock
+      for (const item of basketItems) {
+        const productRef = doc(firestoreDB, "products", item.product.id);
+        const productDoc = await getDoc(productRef);
+        
+        if (productDoc.exists()) {
+          const currentStock = productDoc.data().stock;
+          await updateDoc(productRef, {
+            stock: currentStock - item.stock
+          });
+        }
+      }
+      
+      // Clear basket immediately after successful order creation
+      clearBasket();
+      
+      // If there's an applied coupon, increment its currentUses
+      if (appliedCouponRef) {
+        const couponDoc = await getDoc(appliedCouponRef);
+        if (couponDoc.exists()) {
+          const couponData = couponDoc.data();
+          await updateDoc(appliedCouponRef, {
+            currentUses: (couponData.currentUses || 0) + 1
+          });
+        }
+      }
+
+      const pixPaymentData: PixPaymentData = {
+        id: orderRef.id,
         orderId: orderRef.id,
         userId: user.id,
-        sellerId: data.sellerId,
+        sellerId: basketItems[0]?.product.owner || "",
         pixKey,
         pixKeyType: pixKeyType as "cpf" | "email" | "phoneNumber" | "random",
         pixPayload,
@@ -492,193 +592,29 @@ const CheckoutPage: React.FC = () => {
         transactionId: data.transactionId,
       };
 
-      let pixPaymentRef;
-      try {
-        pixPaymentRef = await addDoc(
-          collection(firestoreDB, "pixPayments"),
-          pixData
-        );
-      } catch (error) {
-        showNotification(
-          "Failed to create PIX payment record" + error,
-          "error"
-        );
-        return Promise.reject(new Error("Failed to create PIX payment record"));
-      }
+      setPixPaymentData(pixPaymentData);
+      showNotification(t("checkout.notifications.orderSuccess"), "success");
+      
+      // Show success notification for 3 seconds then redirect
+      setTimeout(() => {
+        clearBasket();
+        if (productContext?.refreshProducts) {
+          productContext.refreshProducts();
+        }
+        navigate("/my-purchases");
+      }, 3000);
 
-      if (!pixPaymentRef) {
-        showNotification("Failed to create PIX payment record", "error");
-        return Promise.reject(new Error("Failed to create PIX payment record"));
-      }
-
-      return pixData;
+      return pixPaymentData;
     } catch (error) {
       console.error("Error generating PIX payment:", error);
       showNotification(
         "Erro ao gerar pagamento PIX. Tente novamente.",
         "error"
       );
-      return Promise.reject(error);
-    } finally {
       setIsProcessing(false);
-    }
-  };
-
-  // Add payment status polling function
-  const startPaymentStatusPolling = (transactionId: string) => {
-    const pollInterval = setInterval(async () => {
-      try {
-        const pixPaymentsRef = collection(firestoreDB, "pixPayments");
-        const q = query(
-          pixPaymentsRef,
-          where("transactionId", "==", transactionId)
-        );
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          const pixPaymentDoc = querySnapshot.docs[0];
-          const pixPaymentData = pixPaymentDoc.data() as PixPaymentData;
-
-          if (pixPaymentData.status !== "pending") {
-            clearInterval(pollInterval);
-
-            if (pixPaymentData.status === "paid") {
-              showNotification("Pagamento PIX confirmado!", "success");
-              clearBasket();
-              navigate("/order-confirmation");
-            } else if (pixPaymentData.status === "expired") {
-              showNotification("Tempo para pagamento PIX expirado.", "error");
-            } else if (pixPaymentData.status === "failed") {
-              showNotification(
-                `Falha no pagamento: ${
-                  pixPaymentData.errorMessage || "Erro desconhecido"
-                }`,
-                "error"
-              );
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error polling payment status:", error);
-        clearInterval(pollInterval);
-
-        if (error) {
-          showNotification(
-            `Erro ao verificar status do pagamento: ${error}`,
-            "error"
-          );
-        } else {
-          showNotification(
-            "Erro ao verificar status do pagamento. Tente novamente.",
-            "error"
-          );
-        }
-      }
-    }, 5000); // Poll every 5 seconds
-
-    // Clear polling after 30 minutes (payment expiration)
-    setTimeout(() => {
-      clearInterval(pollInterval);
-    }, 30 * 60 * 1000);
-  };
-
-  // Update the updateProductQuantities function
-  const updateProductQuantities = async (orderId: string) => {
-    try {
-      // Get the order details
-      const orderRef = doc(firestoreDB, "orders", orderId);
-      const orderDoc = await getDoc(orderRef);
-      if (!orderDoc.exists()) {
-        throw new Error("Order not found");
-      }
-
-      const orderData = orderDoc.data();
-      const items = orderData.items;
-
-      // Use a transaction to ensure all updates are atomic
-      await runTransaction(firestoreDB, async (transaction) => {
-        for (const item of items) {
-          const productRef = doc(firestoreDB, "products", item.productId);
-          const productDoc = await transaction.get(productRef);
-
-          if (!productDoc.exists()) {
-            throw new Error(`Product ${item.productId} not found`);
-          }
-
-          const currentStock = productDoc.data().stock;
-          const newStock = currentStock - item.stock;
-
-          if (newStock < 0) {
-            throw new Error(`Insufficient stock for product ${item.name}`);
-          }
-
-          transaction.update(productRef, { stock: newStock });
-        }
-      });
-
-      return true;
-    } catch (error) {
-      console.error("Error updating product quantities:", error);
       throw error;
     }
   };
-
-  // Update the PIX payment status check in useEffect
-  useEffect(() => {
-    if (pixPaymentData) {
-      const unsubscribe = onSnapshot(
-        doc(firestoreDB, "pixPayments", pixPaymentData.orderId),
-        async (snapshot) => {
-          const data = snapshot.data() as PixPaymentData;
-          if (data) {
-            setPixPaymentData(data);
-
-            if (data.status === "paid") {
-              try {
-                // Update product quantities
-                await updateProductQuantities(data.orderId);
-
-                // Update order status
-                const orderRef = doc(firestoreDB, "orders", data.orderId);
-                await updateDoc(orderRef, {
-                  status: "paid",
-                  paidAt: new Date().toISOString(),
-                });
-
-                showNotification("Pagamento PIX confirmado!", "success");
-                clearBasket();
-                navigate("/order-confirmation");
-              } catch (error) {
-                console.error("Error processing payment confirmation:", error);
-                showNotification(
-                  "Erro ao processar confirmação do pagamento. Entre em contato com o suporte.",
-                  "error"
-                );
-              }
-            } else if (data.status === "expired") {
-              showNotification("Tempo para pagamento PIX expirado.", "error");
-            } else if (data.status === "failed") {
-              showNotification(
-                `Falha no pagamento: ${
-                  data.errorMessage || "Erro desconhecido"
-                }`,
-                "error"
-              );
-            }
-          }
-        },
-        (error) => {
-          console.error("Error checking PIX payment status:", error);
-          showNotification(
-            "Erro ao verificar status do pagamento. Tente novamente.",
-            "error"
-          );
-        }
-      );
-
-      return () => unsubscribe();
-    }
-  }, [clearBasket, navigate, pixPaymentData, showNotification]);
 
   // Update the useEffect for the countdown timer
   useEffect(() => {
@@ -704,6 +640,106 @@ const CheckoutPage: React.FC = () => {
     };
   }, [countdown]); // Only depend on countdown value
 
+  const handleApplyCoupon = async () => {
+    if (!formData.couponCode.trim()) {
+      setCouponError(t("checkout.validation.couponRequired"));
+      return;
+    }
+
+    try {
+      // Query the coupons collection
+      const couponsRef = collection(firestoreDB, "coupons");
+      const q = query(
+        couponsRef,
+        where("code", "==", formData.couponCode.toUpperCase()),
+        where("isActive", "==", true)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        setCouponError(t("checkout.validation.invalidCoupon"));
+        setDiscount(0);
+        setAppliedCouponRef(null);
+        return;
+      }
+
+      const couponDoc = querySnapshot.docs[0];
+      const couponData = couponDoc.data() as Coupon;
+
+      // Check if coupon is expired
+      if (couponData.expiresAt && couponData.expiresAt.toDate() < new Date()) {
+        setCouponError(t("checkout.validation.expiredCoupon"));
+        setDiscount(0);
+        setAppliedCouponRef(null);
+        return;
+      }
+
+      // Check if coupon has minimum purchase amount
+      if (couponData.minimumPurchase && total < couponData.minimumPurchase) {
+        setCouponError(t("checkout.validation.minimumPurchase", { amount: couponData.minimumPurchase }));
+        setDiscount(0);
+        setAppliedCouponRef(null);
+        return;
+      }
+
+      // Check if coupon has reached maximum uses
+      if (couponData.maxUses && couponData.currentUses && couponData.currentUses >= couponData.maxUses) {
+        setCouponError(t("checkout.validation.couponLimitReached"));
+        setDiscount(0);
+        setAppliedCouponRef(null);
+        return;
+      }
+
+      // Calculate discount
+      let discountAmount = 0;
+
+      if (couponData.productIds && couponData.productIds.length > 0) {
+        // Product-specific coupon
+        const eligibleItems = basketItems.filter(item => 
+          couponData.productIds!.includes(item.product.id)
+        );
+
+        if (eligibleItems.length === 0) {
+          setCouponError(t("checkout.validation.couponNotEligible"));
+          setDiscount(0);
+          setAppliedCouponRef(null);
+          return;
+        }
+
+        const eligibleTotal = eligibleItems.reduce(
+          (sum, item) => sum + item.product.price * item.stock,
+          0
+        );
+
+        if (couponData.discountType === "percentage") {
+          discountAmount = (eligibleTotal * couponData.discountValue) / 100;
+        } else {
+          discountAmount = couponData.discountValue;
+        }
+      } else {
+        // Generic coupon
+        if (couponData.discountType === "percentage") {
+          discountAmount = (total * couponData.discountValue) / 100;
+        } else {
+          discountAmount = couponData.discountValue;
+        }
+      }
+
+      // Ensure discount doesn't exceed total
+      discountAmount = Math.min(discountAmount, total);
+
+      setDiscount(discountAmount);
+      setCouponError("");
+      setAppliedCouponRef(couponDoc.ref); // Store coupon ref for later use
+      showNotification(t("checkout.notifications.couponApplied"), "success");
+    } catch (error) {
+      console.error("Error applying coupon:", error);
+      setCouponError(t("checkout.validation.couponError"));
+      setDiscount(0);
+      setAppliedCouponRef(null);
+    }
+  };
+
   if (!basketItems || basketItems.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -714,7 +750,7 @@ const CheckoutPage: React.FC = () => {
             a compra.
           </p>
           <button
-            onClick={() => navigate("/products")}
+            onClick={() => navigate("/home")}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Continuar Comprando
@@ -916,110 +952,215 @@ const CheckoutPage: React.FC = () => {
                 {t("checkout.paymentMethod")}
               </h2>
               <div className="space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">
-                    {t("checkout.pixDescription")}
-                  </p>
+                {/* Payment Method Selection */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="pix"
+                        checked={formData.paymentMethod === 'pix'}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">PIX</span>
+                    </label>
+                    <label className={`flex items-center ${total < 500 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="installment"
+                        checked={formData.paymentMethod === 'installment'}
+                        onChange={handleInputChange}
+                        disabled={total < 500}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">{t("checkout.installments")}</span>
+                    </label>
+                  </div>
+                  {total < 500 && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      {t("checkout.minInstallmentValue")}
+                    </p>
+                  )}
                 </div>
 
-                {!pixPaymentData ? (
-                  <div>
-                    <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                {/* PIX Payment Section */}
+                {formData.paymentMethod === 'pix' && (
+                  <>
+                    <div className="bg-gray-50 p-4 rounded-lg">
                       <p className="text-sm text-gray-600">
-                        {t("checkout.pixInstructions")}
+                        {t("checkout.pixDescription")}
                       </p>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="bg-white p-6 rounded-lg border border-gray-200">
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">
-                        {t("checkout.pixPayment")}
-                      </h3>
 
-                      <div className="flex flex-col items-center justify-center mb-4">
-                        {pixPaymentData && (
-                          <div className="bg-white p-4 rounded-lg border border-gray-200 flex flex-col items-center">
-                            <div className="w-[200px] h-[200px] flex items-center justify-center">
-                              <QRCodeSVG
-                                value={pixPaymentData.pixPayload}
-                                size={200}
-                                level="H"
-                                includeMargin={true}
-                              />
-                            </div>
-                            <div className="mt-4 text-center">
-                              <p className="text-sm text-gray-600">
-                                {t("checkout.scanQRCode")}
-                              </p>
-                              <p className="text-sm text-gray-600 mt-2">
-                                {t("checkout.copyPixKey")}:{" "}
-                                {pixPaymentData.pixKey}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-2 text-center">
-                        <p className="text-sm text-gray-600">
-                          {t("checkout.pixKey")}: {pixPaymentData.pixKey}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {t("checkout.amount")}: R${" "}
-                          {pixPaymentData.amount.toFixed(2)}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {t("checkout.expiresAt")}:{" "}
-                          {new Date(
-                            pixPaymentData.expiresAt
-                          ).toLocaleTimeString()}
-                        </p>
-                      </div>
-
-                      <div className="mt-4">
-                        <div className="flex items-center justify-center space-x-2">
-                          <div
-                            className={`h-2 w-2 rounded-full ${
-                              pixPaymentData.status === "paid"
-                                ? "bg-green-500"
-                                : pixPaymentData.status === "expired"
-                                ? "bg-red-500"
-                                : "bg-yellow-500"
-                            }`}
-                          ></div>
+                    {!pixPaymentData ? (
+                      <div>
+                        <div className="bg-gray-50 p-4 rounded-lg mb-4">
                           <p className="text-sm text-gray-600">
-                            {pixPaymentData.status === "paid"
-                              ? t("checkout.paymentConfirmed")
-                              : pixPaymentData.status === "expired"
-                              ? t("checkout.paymentExpired")
-                              : t("checkout.waitingPayment")}
+                            {t("checkout.pixInstructions")}
                           </p>
                         </div>
                       </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="bg-white p-6 rounded-lg border border-gray-200">
+                          <h3 className="text-lg font-medium text-gray-900 mb-4">
+                            {t("checkout.pixPayment")}
+                          </h3>
+
+                          <div className="flex flex-col items-center justify-center mb-4">
+                            {pixPaymentData && (
+                              <div className="bg-white p-4 rounded-lg border border-gray-200 flex flex-col items-center">
+                                <div className="w-[200px] h-[200px] flex items-center justify-center">
+                                  <QRCodeSVG
+                                    value={pixPaymentData.pixPayload}
+                                    size={200}
+                                    level="H"
+                                    includeMargin={true}
+                                  />
+                                </div>
+                                <div className="mt-4 text-center">
+                                  <p className="text-sm text-gray-600">
+                                    {t("checkout.scanQRCode")}
+                                  </p>
+                                  <p className="text-sm text-gray-600 mt-2">
+                                    {t("checkout.copyPixKey")}:{" "}
+                                    {pixPaymentData.pixKey}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-2 text-center">
+                            <p className="text-sm text-gray-600">
+                              {t("checkout.pixKey")}: {pixPaymentData.pixKey}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {t("checkout.amount")}: R${" "}
+                              {pixPaymentData.amount.toFixed(2)}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {t("checkout.expiresAt")}:{" "}
+                              {new Date(
+                                pixPaymentData.expiresAt
+                              ).toLocaleTimeString()}
+                            </p>
+                          </div>
+
+                          <div className="mt-4">
+                            <div className="flex items-center justify-center space-x-2">
+                              <div
+                                className={`h-2 w-2 rounded-full ${
+                                  pixPaymentData.status === "paid"
+                                    ? "bg-green-500"
+                                    : pixPaymentData.status === "expired"
+                                    ? "bg-red-500"
+                                    : "bg-yellow-500"
+                                }`}
+                              ></div>
+                              <p className="text-sm text-gray-600">
+                                {pixPaymentData.status === "paid"
+                                  ? t("checkout.paymentConfirmed")
+                                  : pixPaymentData.status === "expired"
+                                  ? t("checkout.paymentExpired")
+                                  : t("checkout.waitingPayment")}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {pixPaymentData.status === "expired" && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              generatePixPayment({
+                                orderId: pixPaymentData.orderId,
+                                userId: user!.id,
+                                sellerId: basketItems[0]?.product.owner || "",
+                                amount: total,
+                                transactionId: pixPaymentData.transactionId!,
+                              })
+                            }
+                            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            {t("checkout.generateNewQRCode")}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Installment Payment Section */}
+                {formData.paymentMethod === 'installment' && (
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600">
+                        {t("checkout.installmentsDescription")}
+                      </p>
                     </div>
 
-                    {pixPaymentData.status === "expired" && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          generatePixPayment({
-                            orderId: pixPaymentData.orderId,
-                            userId: user!.id,
-                            sellerId: basketItems[0]?.product.owner || "",
-                            amount: total,
-                            transactionId: pixPaymentData.transactionId!,
-                          })
-                        }
-                        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        {t("checkout.selectInstallments")}
+                      </label>
+                      <select
+                        name="installments"
+                        value={formData.installments}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                       >
-                        {t("checkout.generateNewQRCode")}
-                      </button>
-                    )}
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => (
+                          <option key={num} value={num}>
+                            {num}x {t("checkout.installments")} - R${(total / num).toFixed(2)}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-sm text-gray-500">
+                        {t("checkout.installmentTotal")}: R${total.toFixed(2)}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
+
+            {/* Coupon Code Section */}
+            {!pixPaymentData && (
+              <div>
+                <h2 className="text-lg font-semibold mb-4">
+                  {t("checkout.couponCode")}
+                </h2>
+                <div className="flex space-x-2">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      id="couponCode"
+                      name="couponCode"
+                      value={formData.couponCode}
+                      onChange={handleInputChange}
+                      placeholder={t("checkout.couponPlaceholder")}
+                      className={`mt-1 block w-full rounded-md shadow-sm ${
+                        couponError ? "border-red-300" : "border-gray-300"
+                      }`}
+                    />
+                    {couponError && (
+                      <p className="mt-1 text-sm text-red-600">{couponError}</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    className="mt-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    {t("checkout.applyCoupon")}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -1070,6 +1211,12 @@ const CheckoutPage: React.FC = () => {
                 </p>
               </div>
             ))}
+            {discount > 0 && (
+              <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <p>{t("common.discount")}</p>
+                <p>-R${discount.toFixed(2)}</p>
+              </div>
+            )}
             <div className="border-t pt-4">
               <div className="flex justify-between text-base font-medium text-gray-900">
                 <p>{t("common.total")}</p>

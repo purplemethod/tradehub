@@ -15,6 +15,7 @@ import {
   PlusIcon,
   MinusIcon,
   TrashIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import logo from "../assets/logoTradeHub.png";
 import { useContext, useState } from "react";
@@ -25,7 +26,7 @@ import { useTranslation } from "react-i18next";
 import { useBasket } from "./context/useBasket";
 import type { Product } from "../types";
 import LanguageSwitcher from "./components/LanguageSwitcher";
-import { canManageProducts } from "../utils/permissions";
+import { isAdmin } from "../utils/permissions";
 
 type BasketItem = {
   product: Product;
@@ -265,14 +266,26 @@ const NavBar: React.FC = () => {
 
   const navigation = [
     { name: "nav.sellingProducts", href: "/home", current: false },
-    user?.role &&
-      canManageProducts(user.role) && {
-        name: "nav.myProducts",
-        href: "/my-products",
-        current: false,
-      },
     { name: "nav.myFavorites", href: "/my-favorites", current: false },
     { name: "nav.myPurchases", href: "/my-purchases", current: false },
+    user?.role &&
+      isAdmin(user.role) && {
+        name: "nav.admin",
+        href: "#",
+        current: false,
+        submenu: [
+          {
+            name: "nav.myProducts",
+            href: "/my-products",
+            current: false,
+          },
+          {
+            name: "admin.coupons.title",
+            href: "/admin/coupons",
+            current: false,
+          },
+        ],
+      },
   ];
 
   const handleLogout = async () => {
@@ -319,7 +332,29 @@ const NavBar: React.FC = () => {
                   <div className="flex space-x-4">
                     {navigation.map(
                       (item) =>
-                        item && (
+                        item &&
+                        (item.submenu ? (
+                          <Menu as="div" className="relative" key={item.name}>
+                            <MenuButton
+                              className={`rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white flex items-center`}
+                            >
+                              {t(item.name)}
+                              <ChevronDownIcon className="ml-1 h-4 w-4" />
+                            </MenuButton>
+                            <MenuItems className="absolute left-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none">
+                              {item.submenu.map((subItem) => (
+                                <MenuItem key={subItem.name}>
+                                  <Link
+                                    to={subItem.href}
+                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                  >
+                                    {t(subItem.name)}
+                                  </Link>
+                                </MenuItem>
+                              ))}
+                            </MenuItems>
+                          </Menu>
+                        ) : (
                           <Link
                             key={item.name}
                             to={item.href}
@@ -332,7 +367,7 @@ const NavBar: React.FC = () => {
                           >
                             {t(item.name)}
                           </Link>
-                        )
+                        ))
                     )}
                   </div>
                 </div>
@@ -396,16 +431,7 @@ const NavBar: React.FC = () => {
                         {t("profile.title")}
                       </Link>
                     </MenuItem>
-                    {user?.role && canManageProducts(user.role) && (
-                      <MenuItem>
-                        <Link
-                          to="/my-products"
-                          className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
-                        >
-                          {t("products.myProducts")}
-                        </Link>
-                      </MenuItem>
-                    )}
+                    <div className="border-t border-gray-200 my-1" />
                     <MenuItem>
                       <Link
                         to="/my-favorites"
@@ -422,11 +448,38 @@ const NavBar: React.FC = () => {
                         {t("orders.myPurchases")}
                       </Link>
                     </MenuItem>
-                    <div className="border-t border-gray-200 my-1" />
+                    {user?.role && isAdmin(user.role) && (
+                      <>
+                        <div className="px-4 py-2 text-xs font-semibold text-gray-500">
+                          {t("nav.admin")}
+                        </div>
+                        <MenuItem>
+                          <Link
+                            to="/my-products"
+                            className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
+                          >
+                            {t("products.myProducts")}
+                          </Link>
+                        </MenuItem>
+                        <MenuItem>
+                          <Link
+                            to="/admin/coupons"
+                            className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
+                          >
+                            {t("admin.coupons.title")}
+                          </Link>
+                        </MenuItem>
+                      </>
+                    )}
                     <MenuItem>
-                      <div className="px-4 py-2">
-                        <LanguageSwitcher />
-                      </div>
+                      <>
+                        <div className="px-4 py-2 text-xs font-semibold text-gray-500">
+                          {t("nav.language")}
+                        </div>
+                        <div className="px-4 py-2">
+                          <LanguageSwitcher />
+                        </div>
+                      </>
                     </MenuItem>
                     <div className="border-t border-gray-200 my-1" />
                     <MenuItem>
@@ -447,7 +500,24 @@ const NavBar: React.FC = () => {
             <div className="space-y-1 px-2 pt-2 pb-3">
               {navigation.map(
                 (item) =>
-                  item && (
+                  item &&
+                  (item.submenu ? (
+                    <div key={item.name} className="space-y-1">
+                      <div className="px-3 py-2 text-base font-medium text-gray-300">
+                        {t(item.name)}
+                      </div>
+                      {item.submenu.map((subItem) => (
+                        <DisclosureButton
+                          key={subItem.name}
+                          as={Link}
+                          to={subItem.href}
+                          className="block pl-6 pr-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                        >
+                          {t(subItem.name)}
+                        </DisclosureButton>
+                      ))}
+                    </div>
+                  ) : (
                     <DisclosureButton
                       key={item.name}
                       as={Link}
@@ -461,7 +531,7 @@ const NavBar: React.FC = () => {
                     >
                       {t(item.name)}
                     </DisclosureButton>
-                  )
+                  ))
               )}
             </div>
           </DisclosurePanel>

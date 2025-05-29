@@ -58,6 +58,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({
             shippingCost: productData.shippingCost,
             freeShipping: productData.freeShipping,
             status: productData.status,
+            allowInstallments: productData.allowInstallments || false,
+            voltage: productData.voltage || undefined,
           };
 
           productsList.push(product);

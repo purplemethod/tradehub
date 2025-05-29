@@ -35,6 +35,7 @@ interface FormErrors {
   category?: string;
   condition?: string;
   images?: string;
+  voltage?: string;
 }
 
 interface ProductImage {
@@ -79,6 +80,10 @@ const NewProductPage: React.FC = () => {
     stock: "",
     category: "",
     condition: "",
+    voltage: "",
+    allowInstallments: false,
+    minInstallmentValue: 500,
+    maxInstallments: 10,
   });
   const { refreshProducts } = useProducts();
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -502,6 +507,7 @@ const NewProductPage: React.FC = () => {
         imageMetadataRef: imagesMetadata,
         status: "draft",
       };
+      console.log("Before saving product:", productData);
 
       // Save Product
       await setDoc(productRef, productData);
@@ -681,6 +687,7 @@ const NewProductPage: React.FC = () => {
               }`}
             >
               <option value="">{t("products.selectCondition")}</option>
+              <option value="new_sealed">{t("products.conditions.new_sealed")}</option>
               <option value="new">{t("products.conditions.new")}</option>
               <option value="like_new">{t("products.conditions.like_new")}</option>
               <option value="good">{t("products.conditions.good")}</option>
@@ -690,6 +697,53 @@ const NewProductPage: React.FC = () => {
             {errors.condition && (
               <p className="mt-1 text-sm text-red-600">{errors.condition}</p>
             )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="voltage"
+              className="block text-sm font-medium text-gray-700"
+            >
+              {t("products.newProduct.voltage")}
+            </label>
+            <input
+              type="text"
+              id="voltage"
+              name="voltage"
+              value={formData.voltage}
+              onChange={handleInputChange}
+              placeholder="e.g., 110V, 220V"
+              className="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-lg font-semibold mb-4">
+              {t("checkout.installments")}
+            </h2>
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="allowInstallments"
+                  name="allowInstallments"
+                  checked={formData.allowInstallments}
+                  onChange={handleInputChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="allowInstallments"
+                  className="ml-2 block text-sm text-gray-700"
+                >
+                  {t("checkout.installmentsInfo")}
+                </label>
+              </div>
+              {formData.allowInstallments && (
+                <div className="mt-2 text-sm text-gray-500">
+                  <p>{t("checkout.minInstallmentValue")}</p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div>

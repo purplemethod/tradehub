@@ -11,6 +11,9 @@ export const hasPermission = (userRole: UserRole, requiredRole: UserRole): boole
   return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
 };
 
+export const isAdmin = (userRole: UserRole): boolean => {
+  return hasPermission(userRole, UserRole.ADMIN);
+};
 export const canManageProducts = (userRole: UserRole): boolean => {
   return hasPermission(userRole, UserRole.SELLER);
 };

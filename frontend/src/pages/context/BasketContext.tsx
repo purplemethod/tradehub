@@ -100,9 +100,9 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       // Validate product doesn't belong to the current user
-      if (product.owner === user?.email) {
-        return { success: false, reason: t("products.errors.cannotBuyOwnProduct") };
-      }
+      // if (product.owner === user?.email) {
+      //   return { success: false, reason: t("products.errors.cannotBuyOwnProduct") };
+      // }
 
       let updated = false;
       setBasketItems((prevItems) => {

@@ -21,6 +21,12 @@ service cloud.firestore {
       allow read: if true;
     }
     
+    // Coupons collection rules
+    match /coupons/{couponId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+    
     // Products collection rules
     match /products/{productId} {
       allow create: if isAuthenticated() && 
