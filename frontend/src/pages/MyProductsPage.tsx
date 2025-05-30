@@ -355,24 +355,26 @@ const MyProductsPage: React.FC = () => {
                           />
                         </svg>
                       </button>
-                      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
-                        {images.map((_, idx) => (
-                          <div
-                            key={idx}
-                            className={`w-2 h-2 rounded-full cursor-pointer ${
-                              idx === (productImageIndices[product.id] || 0)
-                                ? "bg-gray-800"
-                                : "bg-gray-300"
-                            }`}
-                            onClick={() =>
-                              setProductImageIndices((prev) => ({
-                                ...prev,
-                                [product.id]: idx,
-                              }))
-                            }
-                          />
-                        ))}
-                      </div>
+                      {images.length > 1 && (
+                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                          {images.map((_, idx) => (
+                            <div
+                              key={idx}
+                              className={`w-2 h-2 rounded-full cursor-pointer ${
+                                idx === (productImageIndices[product.id] || 0)
+                                  ? "bg-gray-800"
+                                  : "bg-gray-300"
+                              }`}
+                              onClick={() =>
+                                setProductImageIndices((prev) => ({
+                                  ...prev,
+                                  [product.id]: idx,
+                                }))
+                              }
+                            />
+                          ))}
+                        </div>
+                      )}
                     </>
                   )}
                   <div className="absolute top-2 right-2">

@@ -472,14 +472,14 @@ const NavBar: React.FC = () => {
                       </>
                     )}
                     <MenuItem>
-                      <>
+                      <div className="w-full">
                         <div className="px-4 py-2 text-xs font-semibold text-gray-500">
                           {t("nav.language")}
                         </div>
                         <div className="px-4 py-2">
                           <LanguageSwitcher />
                         </div>
-                      </>
+                      </div>
                     </MenuItem>
                     <div className="border-t border-gray-200 my-1" />
                     <MenuItem>
@@ -522,7 +522,6 @@ const NavBar: React.FC = () => {
                       key={item.name}
                       as={Link}
                       to={item.href}
-                      aria-current={item.current ? "page" : undefined}
                       className={`block rounded-md px-3 py-2 text-base font-medium ${
                         item.current
                           ? "bg-gray-900 text-white"

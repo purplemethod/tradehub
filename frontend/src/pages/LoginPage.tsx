@@ -101,14 +101,12 @@ const LoginPage: React.FC = () => {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      console.log(result);
       try {
         // Create or update user document in Firestore
         const userRef = doc(firestoreDB, "users", result.user.uid);
         const userDoc = await getDoc(userRef);
 
         if (userDoc.exists()) {
-          console.log("userDoc.exists()");
           setUser({
             ...result.user,
             id: result.user.uid,
