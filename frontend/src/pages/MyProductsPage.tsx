@@ -282,12 +282,15 @@ const MyProductsPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {myProducts.map((product) => {
-            const images = product.imageMetadataRef?.length
-              ? product.imageMetadataRef
+            const images = Array.isArray(product.imageMetadataRef) 
+              ? product.imageMetadataRef 
               : [];
 
-            const currentImageIndex = productImageIndices[product.id] || 0;
-            const currentImage = images[currentImageIndex];
+            const currentImageIndex = Math.min(
+              productImageIndices[product.id] || 0,
+              images.length - 1
+            );
+            const currentImage = images[currentImageIndex] || null;
 
             return (
               <div
@@ -301,6 +304,7 @@ const MyProductsPage: React.FC = () => {
                     className="w-full h-full object-center object-contain bg-gray-100 cursor-pointer"
                     onClick={() =>
                       images.length > 0 &&
+                      currentImage &&
                       handleImageClick(product, currentImageIndex)
                     }
                     onError={(e) => {
