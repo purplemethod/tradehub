@@ -6,6 +6,8 @@ import {
   collection,
   writeBatch,
   setDoc,
+  deleteDoc,
+  getDocs,
 } from "firebase/firestore";
 import { useTranslation } from "react-i18next";
 import { useNotification } from "./context/NotificationContext";
@@ -46,6 +48,7 @@ const EditProductPage: React.FC = () => {
     shippingCost: "",
     freeShipping: false,
     voltage: "",
+    customVoltage: "",
     status: "active" as "active" | "inactive" | "draft",
     allowInstallments: false,
     minInstallmentValue: 500,
@@ -143,7 +146,8 @@ const EditProductPage: React.FC = () => {
         dimensions: foundProduct.dimensions || "",
         shippingCost: foundProduct.shippingCost?.toString() || "0",
         freeShipping: foundProduct.freeShipping || false,
-        voltage: foundProduct.voltage || "",
+        voltage: ['110V', '220V', 'Bivolt'].includes(foundProduct.voltage || '') ? (foundProduct.voltage || '') : 'Other',
+        customVoltage: ['110V', '220V', 'Bivolt'].includes(foundProduct.voltage || '') ? '' : (foundProduct.voltage || ''),
         status: foundProduct.status || "active",
         allowInstallments: foundProduct.allowInstallments || false,
         minInstallmentValue: foundProduct.minInstallmentValue || 500,
@@ -287,7 +291,9 @@ const EditProductPage: React.FC = () => {
 
   const handleRemoveImage = async (index: number) => {
     try {
-      // Update state
+      // Get the image metadata to remove
+      const imageMeta = product?.imageMetadataRef?.[index];
+      // Remove from state
       const newMetadata = [...(product?.imageMetadataRef || [])];
       newMetadata.splice(index, 1);
 
@@ -303,6 +309,18 @@ const EditProductPage: React.FC = () => {
         newUrls.splice(index, 1);
         return newUrls;
       });
+
+      // Delete from Firestore if fullImageRef exists
+      if (imageMeta?.fullImageRef) {
+        // Delete all chunks in subcollection
+        const chunksCol = collection(firestoreDB, `${imageMeta.fullImageRef}/chunks`);
+        const chunksSnap = await getDocs(chunksCol);
+        const deleteChunkPromises = chunksSnap.docs.map((chunkDoc) => deleteDoc(chunkDoc.ref));
+        await Promise.all(deleteChunkPromises);
+        // Delete the image document itself
+        const imageDoc = doc(firestoreDB, imageMeta.fullImageRef);
+        await deleteDoc(imageDoc);
+      }
 
       showNotification(t("products.removeImage"), "success");
     } catch (error) {
@@ -417,7 +435,7 @@ const EditProductPage: React.FC = () => {
         dimensions: formData.dimensions || "",
         shippingCost: Number(formData.shippingCost) || 0,
         freeShipping: Boolean(formData.freeShipping),
-        voltage: formData.voltage || "",
+        voltage: formData.voltage === 'Other' ? formData.customVoltage : formData.voltage,
         status: formData.status,
         imageMetadataRef: newImageMetadata.map((img) => ({
           type: img.type,
@@ -586,15 +604,31 @@ const EditProductPage: React.FC = () => {
               >
                 {t("products.newProduct.voltage")}
               </label>
-              <input
-                type="text"
-                id="voltage"
-                name="voltage"
-                value={formData.voltage}
-                onChange={handleInputChange}
-                placeholder="e.g., 110V, 220V"
-                className="mt-1 block w-full rounded-md shadow-sm border-gray-300"
-              />
+              <div className="mt-1 flex flex-col gap-2">
+                {['110V', '220V', 'Bivolt', 'Other'].map((option) => (
+                  <label key={option} className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="voltage"
+                      value={option}
+                      checked={formData.voltage === option}
+                      onChange={handleInputChange}
+                      className="form-radio text-blue-600"
+                    />
+                    <span className="ml-2">{option}</span>
+                  </label>
+                ))}
+                {formData.voltage === 'Other' && (
+                  <input
+                    type="text"
+                    name="customVoltage"
+                    value={formData.customVoltage}
+                    onChange={handleInputChange}
+                    placeholder="Enter custom voltage"
+                    className="mt-1 block w-full rounded-md shadow-sm border-gray-300"
+                  />
+                )}
+              </div>
             </div>
           </div>
 

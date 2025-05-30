@@ -81,6 +81,7 @@ const NewProductPage: React.FC = () => {
     category: "",
     condition: "",
     voltage: "",
+    customVoltage: "",
     allowInstallments: false,
     minInstallmentValue: 500,
     maxInstallments: 10,
@@ -508,6 +509,7 @@ const NewProductPage: React.FC = () => {
       // Create the product with the metadata reference
       const productData = {
         ...formData,
+        voltage: formData.voltage === 'Other' ? formData.customVoltage : formData.voltage,
         userId: user.id,
         owner: user.email,
         createdAt: Timestamp.now(),
@@ -715,21 +717,34 @@ const NewProductPage: React.FC = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="voltage"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-gray-700">
               {t("products.newProduct.voltage")}
             </label>
-            <input
-              type="text"
-              id="voltage"
-              name="voltage"
-              value={formData.voltage}
-              onChange={handleInputChange}
-              placeholder="e.g., 110V, 220V"
-              className="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div className="mt-1 flex flex-col gap-2">
+              {['110V', '220V', 'Bivolt', 'Other'].map((option) => (
+                <label key={option} className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="voltage"
+                    value={option}
+                    checked={formData.voltage === option}
+                    onChange={handleInputChange}
+                    className="form-radio text-blue-600"
+                  />
+                  <span className="ml-2">{option}</span>
+                </label>
+              ))}
+              {formData.voltage === 'Other' && (
+                <input
+                  type="text"
+                  name="customVoltage"
+                  value={formData.customVoltage}
+                  onChange={handleInputChange}
+                  placeholder="Enter custom voltage"
+                  className="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              )}
+            </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
