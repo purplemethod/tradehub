@@ -34,9 +34,6 @@ const MyProductsPage: React.FC = () => {
     Record<string, number>
   >({});
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedImageThumbnail, setSelectedImageThumbnail] = useState<
-    string | null
-  >(null);
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -233,22 +230,13 @@ const MyProductsPage: React.FC = () => {
     navigate("/new-product");
   };
 
-  const handleNextImage = async (product: Product | undefined) => {
+  const handleNextImage = (product: Product) => {
     if (!product) return;
     const currentIndex = productImageIndices[product.id] || 0;
     const totalImages = product.imageMetadataRef?.length || 0;
     if (currentIndex >= totalImages - 1) return;
     const nextIndex = currentIndex + 1;
-    try {
-      const mediaItem = product.imageMetadataRef?.[nextIndex];
-      if (!mediaItem) return;
-      setProductImageIndices((prev) => ({ ...prev, [product.id]: nextIndex }));
-      setSelectedImageThumbnail(mediaItem?.thumbnailDataURL ?? null);
-      setSelectedProduct(product);
-    } catch (error) {
-      console.error("Error loading next media:", error);
-      showNotification("Failed to load next media", "error");
-    }
+    setProductImageIndices((prev) => ({ ...prev, [product.id]: nextIndex }));
   };
 
   const handlePrevImage = (product: Product) => {
@@ -256,16 +244,7 @@ const MyProductsPage: React.FC = () => {
     const currentIndex = productImageIndices[product.id] || 0;
     if (currentIndex <= 0) return;
     const prevIndex = currentIndex - 1;
-    try {
-      const mediaItem = product.imageMetadataRef?.[prevIndex];
-      if (!mediaItem) return;
-      setProductImageIndices((prev) => ({ ...prev, [product.id]: prevIndex }));
-      setSelectedImageThumbnail(mediaItem?.thumbnailDataURL ?? null);
-      setSelectedProduct(product);
-    } catch (error) {
-      console.error("Error loading previous media:", error);
-      showNotification("Failed to load previous media", "error");
-    }
+    setProductImageIndices((prev) => ({ ...prev, [product.id]: prevIndex }));
   };
 
   if (loading) {
@@ -307,8 +286,6 @@ const MyProductsPage: React.FC = () => {
               ? product.imageMetadataRef
               : [];
 
-            const hasMultipleImages = images.length > 1;
-
             return (
               <div
                 key={product.id}
@@ -317,43 +294,19 @@ const MyProductsPage: React.FC = () => {
                 <div className="relative h-48">
                   <img
                     src={
-                      images[productImageIndices[product.id] || 0]
-                        .thumbnailDataURL ??
-                      selectedImageThumbnail ??
-                      undefined
+                      images[productImageIndices[product.id] || 0]?.thumbnailDataURL ||
+                        "/no-image.svg"
                     }
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-center object-contain bg-gray-100 cursor-pointer"
                     onClick={() =>
-                      handleImageClick(product, productImageIndices[product.id])
+                      handleImageClick(product, productImageIndices[product.id] || 0)
                     }
                     onError={(e) => {
-                      e.currentTarget.src = "Failed to load image";
+                      e.currentTarget.src = "/no-image.svg";
                     }}
                   />
-                  {images[productImageIndices[product.id] || 0]?.type ===
-                    "youtube" && (
-                    <div
-                      onClick={() =>
-                        handleImageClick(
-                          product,
-                          productImageIndices[product.id]
-                        )
-                      }
-                      className="absolute inset-0 flex items-center justify-center"
-                    >
-                      <div className="w-16 h-16 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-                        <svg
-                          className="w-8 h-8 text-white"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      </div>
-                    </div>
-                  )}
-                  {hasMultipleImages && (
+                  {images.length > 1 && (
                     <>
                       <button
                         onClick={() => handlePrevImage(product)}
@@ -394,14 +347,17 @@ const MyProductsPage: React.FC = () => {
                         </svg>
                       </button>
                       <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
-                        {images.map((_, index) => (
+                        {images.map((_, idx) => (
                           <div
-                            key={index}
-                            className={`w-2 h-2 rounded-full ${
-                              index === (productImageIndices[product.id] || 0)
-                                ? "bg-gray bg-opacity-50"
-                                : "bg-white"
+                            key={idx}
+                            className={`w-2 h-2 rounded-full cursor-pointer ${
+                              idx === (productImageIndices[product.id] || 0)
+                                ? "bg-gray-800"
+                                : "bg-gray-300"
                             }`}
+                            onClick={() =>
+                              setProductImageIndices((prev) => ({ ...prev, [product.id]: idx }))
+                            }
                           />
                         ))}
                       </div>

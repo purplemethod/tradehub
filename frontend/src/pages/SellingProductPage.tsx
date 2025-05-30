@@ -219,8 +219,6 @@ const SellingProductPage: React.FC = () => {
               ? product.imageMetadataRef
               : [];
 
-            const hasMultipleImages = images.length > 1;
-
             return (
               <div
                 key={product.id}
@@ -234,25 +232,50 @@ const SellingProductPage: React.FC = () => {
                       </span>
                     </div>
                   )}
+                  {/* Left Arrow */}
+                  {images.length > 1 && (
+                    <button
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 z-20 bg-white bg-opacity-70 hover:bg-opacity-100 rounded-full p-1 shadow focus:outline-none"
+                      onClick={() => handlePrevImage(product)}
+                      disabled={(productImageIndices[product.id] || 0) === 0}
+                      aria-label="Previous image"
+                      style={{ pointerEvents: (productImageIndices[product.id] || 0) === 0 ? 'none' : 'auto', opacity: (productImageIndices[product.id] || 0) === 0 ? 0.4 : 1 }}
+                    >
+                      <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                  )}
                   <img
                     src={
-                      images[productImageIndices[product.id] || 0]
-                        ?.thumbnailDataURL ||
+                      images[productImageIndices[product.id] || 0]?.thumbnailDataURL ||
                       selectedImageThumbnail ||
-                      undefined
+                      "/no-image.svg"
                     }
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-center object-contain bg-gray-100 cursor-pointer"
                     onClick={() =>
-                      handleImageClick(
-                        product,
-                        productImageIndices[product.id] || 0
-                      )
+                      images.length > 0 &&
+                      handleImageClick(product, productImageIndices[product.id] || 0)
                     }
                     onError={(e) => {
-                      e.currentTarget.src = "Failed to load image";
+                      e.currentTarget.src = "/no-image.svg";
                     }}
                   />
+                  {/* Right Arrow */}
+                  {images.length > 1 && (
+                    <button
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 z-20 bg-white bg-opacity-70 hover:bg-opacity-100 rounded-full p-1 shadow focus:outline-none"
+                      onClick={() => handleNextImage(product)}
+                      disabled={(productImageIndices[product.id] || 0) >= images.length - 1}
+                      aria-label="Next image"
+                      style={{ pointerEvents: (productImageIndices[product.id] || 0) >= images.length - 1 ? 'none' : 'auto', opacity: (productImageIndices[product.id] || 0) >= images.length - 1 ? 0.4 : 1 }}
+                    >
+                      <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  )}
                   {images[productImageIndices[product.id] || 0]?.type ===
                     "youtube" && (
                     <div
@@ -275,59 +298,22 @@ const SellingProductPage: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  {hasMultipleImages && (
-                    <>
-                      <button
-                        onClick={() => handlePrevImage(product)}
-                        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-75"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 19l-7-7 7-7"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleNextImage(product)}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-75"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </button>
-                      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
-                        {images.map((_, index) => (
-                          <div
-                            key={index}
-                            className={`w-2 h-2 rounded-full ${
-                              index === (productImageIndices[product.id] || 0)
-                                ? "bg-gray bg-opacity-50"
-                                : "bg-white"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </>
+                  {images.length > 1 && (
+                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                      {images.map((_, idx) => (
+                        <div
+                          key={idx}
+                          className={`w-2 h-2 rounded-full cursor-pointer ${
+                            idx === (productImageIndices[product.id] || 0)
+                              ? "bg-gray-800"
+                              : "bg-gray-300"
+                          }`}
+                          onClick={() =>
+                            setProductImageIndices((prev) => ({ ...prev, [product.id]: idx }))
+                          }
+                        />
+                      ))}
+                    </div>
                   )}
                   <div className="absolute top-2 right-2">
                     <span
