@@ -286,6 +286,9 @@ const MyProductsPage: React.FC = () => {
               ? product.imageMetadataRef
               : [];
 
+            const currentImageIndex = productImageIndices[product.id] || 0;
+            const currentImage = images[currentImageIndex];
+
             return (
               <div
                 key={product.id}
@@ -293,14 +296,12 @@ const MyProductsPage: React.FC = () => {
               >
                 <div className="relative h-48">
                   <img
-                    src={
-                      images[productImageIndices[product.id] || 0]?.thumbnailDataURL ||
-                        "/no-image.svg"
-                    }
+                    src={currentImage?.thumbnailDataURL || "/no-image.svg"}
                     alt={product.name}
                     className="w-full h-full object-center object-contain bg-gray-100 cursor-pointer"
                     onClick={() =>
-                      handleImageClick(product, productImageIndices[product.id] || 0)
+                      images.length > 0 &&
+                      handleImageClick(product, currentImageIndex)
                     }
                     onError={(e) => {
                       e.currentTarget.src = "/no-image.svg";
