@@ -28,3 +28,5 @@ dist-ssr
 
 .DS_*
 .DS_Store
+
+.gitignore
