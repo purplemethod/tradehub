@@ -384,7 +384,8 @@
       "good": "Bom",
       "fair": "Regular",
       "poor": "Ruim"
-    }
+    },
+    "voltage": "Voltagem"
   },
   "cart": {
     "title": "Carrinho de Compras",

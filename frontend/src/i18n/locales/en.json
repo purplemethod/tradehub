@@ -387,7 +387,8 @@
       "good": "Good",
       "fair": "Fair",
       "poor": "Poor"
-    }
+    },
+    "voltage": "Voltage"
   },
   "cart": {
     "title": "Shopping Cart",
