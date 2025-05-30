@@ -18,6 +18,7 @@ import ImageModal from "./components/ImageModal";
 import type { Product } from "../types";
 import { canManageAllProducts } from "../utils/permissions";
 import { UserRole } from "../types";
+import noImage from "../assets/no-image.svg";
 
 const MyProductsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -192,12 +193,15 @@ const MyProductsPage: React.FC = () => {
 
       // Delete all associated favorites
       const favoritesRef = collection(firestoreDB, "favorites");
-      const favoritesQuery = query(favoritesRef, where("productId", "==", productId));
+      const favoritesQuery = query(
+        favoritesRef,
+        where("productId", "==", productId)
+      );
       const favoritesSnapshot = await getDocs(favoritesQuery);
 
       // Delete all favorites
-      const favoritesDeletePromises = favoritesSnapshot.docs.map((favoriteDoc) =>
-        deleteDoc(favoriteDoc.ref)
+      const favoritesDeletePromises = favoritesSnapshot.docs.map(
+        (favoriteDoc) => deleteDoc(favoriteDoc.ref)
       );
       await Promise.all(favoritesDeletePromises);
 
@@ -261,12 +265,12 @@ const MyProductsPage: React.FC = () => {
         <h1 className="text-2xl font-bold mb-6 text-gray-900">
           {t("products.myProducts")}
         </h1>
-          <button
-            onClick={handleCreate}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            {t("products.addNew")}
-          </button>
+        <button
+          onClick={handleCreate}
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          {t("products.addNew")}
+        </button>
       </div>
 
       {myProducts.length === 0 ? (
@@ -282,8 +286,8 @@ const MyProductsPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {myProducts.map((product) => {
-            const images = Array.isArray(product.imageMetadataRef) 
-              ? product.imageMetadataRef 
+            const images = Array.isArray(product.imageMetadataRef)
+              ? product.imageMetadataRef
               : [];
 
             const currentImageIndex = Math.min(
@@ -299,7 +303,7 @@ const MyProductsPage: React.FC = () => {
               >
                 <div className="relative h-48">
                   <img
-                    src={currentImage?.thumbnailDataURL || "/no-image.svg"}
+                    src={currentImage?.thumbnailDataURL || noImage}
                     alt={product.name}
                     className="w-full h-full object-center object-contain bg-gray-100 cursor-pointer"
                     onClick={() =>
@@ -308,7 +312,7 @@ const MyProductsPage: React.FC = () => {
                       handleImageClick(product, currentImageIndex)
                     }
                     onError={(e) => {
-                      e.currentTarget.src = "/no-image.svg";
+                      e.currentTarget.src = noImage;
                     }}
                   />
                   {images.length > 1 && (
@@ -361,7 +365,10 @@ const MyProductsPage: React.FC = () => {
                                 : "bg-gray-300"
                             }`}
                             onClick={() =>
-                              setProductImageIndices((prev) => ({ ...prev, [product.id]: idx }))
+                              setProductImageIndices((prev) => ({
+                                ...prev,
+                                [product.id]: idx,
+                              }))
                             }
                           />
                         ))}
@@ -398,7 +405,9 @@ const MyProductsPage: React.FC = () => {
                       {t("products.management.stock")}: {product.stock}
                     </span>
                   </div>
-                  {canManageAllProducts(userContext?.user?.role ?? UserRole.BUYER) && (
+                  {canManageAllProducts(
+                    userContext?.user?.role ?? UserRole.BUYER
+                  ) && (
                     <div className="mt-2 text-sm text-gray-500">
                       {t("products.owner")}: {product.owner}
                     </div>

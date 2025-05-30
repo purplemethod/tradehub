@@ -8,6 +8,7 @@ import type { Product } from "../types";
 import { useBasket } from "./context/BasketContext";
 import { useFavorites } from "./context/FavoritesContext";
 import ImageModal from "./components/ImageModal";
+import noImage from "../assets/no-image.svg";
 
 const SellingProductPage: React.FC = () => {
   const { t } = useTranslation();
@@ -239,27 +240,50 @@ const SellingProductPage: React.FC = () => {
                       onClick={() => handlePrevImage(product)}
                       disabled={(productImageIndices[product.id] || 0) === 0}
                       aria-label="Previous image"
-                      style={{ pointerEvents: (productImageIndices[product.id] || 0) === 0 ? 'none' : 'auto', opacity: (productImageIndices[product.id] || 0) === 0 ? 0.4 : 1 }}
+                      style={{
+                        pointerEvents:
+                          (productImageIndices[product.id] || 0) === 0
+                            ? "none"
+                            : "auto",
+                        opacity:
+                          (productImageIndices[product.id] || 0) === 0
+                            ? 0.4
+                            : 1,
+                      }}
                     >
-                      <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                      <svg
+                        className="w-6 h-6 text-gray-700"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15 19l-7-7 7-7"
+                        />
                       </svg>
                     </button>
                   )}
                   <img
                     src={
-                      images[productImageIndices[product.id] || 0]?.thumbnailDataURL ||
+                      images[productImageIndices[product.id] || 0]
+                        ?.thumbnailDataURL ||
                       selectedImageThumbnail ||
-                      "/no-image.svg"
+                      noImage
                     }
                     alt={product.name}
                     className="w-full h-full object-center object-contain bg-gray-100 cursor-pointer"
                     onClick={() =>
                       images.length > 0 &&
-                      handleImageClick(product, productImageIndices[product.id] || 0)
+                      handleImageClick(
+                        product,
+                        productImageIndices[product.id] || 0
+                      )
                     }
                     onError={(e) => {
-                      e.currentTarget.src = "/no-image.svg";
+                      e.currentTarget.src = noImage;
                     }}
                   />
                   {/* Right Arrow */}
@@ -267,12 +291,36 @@ const SellingProductPage: React.FC = () => {
                     <button
                       className="absolute right-2 top-1/2 transform -translate-y-1/2 z-20 bg-white bg-opacity-70 hover:bg-opacity-100 rounded-full p-1 shadow focus:outline-none"
                       onClick={() => handleNextImage(product)}
-                      disabled={(productImageIndices[product.id] || 0) >= images.length - 1}
+                      disabled={
+                        (productImageIndices[product.id] || 0) >=
+                        images.length - 1
+                      }
                       aria-label="Next image"
-                      style={{ pointerEvents: (productImageIndices[product.id] || 0) >= images.length - 1 ? 'none' : 'auto', opacity: (productImageIndices[product.id] || 0) >= images.length - 1 ? 0.4 : 1 }}
+                      style={{
+                        pointerEvents:
+                          (productImageIndices[product.id] || 0) >=
+                          images.length - 1
+                            ? "none"
+                            : "auto",
+                        opacity:
+                          (productImageIndices[product.id] || 0) >=
+                          images.length - 1
+                            ? 0.4
+                            : 1,
+                      }}
                     >
-                      <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      <svg
+                        className="w-6 h-6 text-gray-700"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 5l7 7-7 7"
+                        />
                       </svg>
                     </button>
                   )}
@@ -309,7 +357,10 @@ const SellingProductPage: React.FC = () => {
                               : "bg-gray-300"
                           }`}
                           onClick={() =>
-                            setProductImageIndices((prev) => ({ ...prev, [product.id]: idx }))
+                            setProductImageIndices((prev) => ({
+                              ...prev,
+                              [product.id]: idx,
+                            }))
                           }
                         />
                       ))}
@@ -364,7 +415,7 @@ const SellingProductPage: React.FC = () => {
                   {product.weight && (
                     <p className="text-sm text-gray-500">
                       {t("products.weight")}: {product.weight}
-                  </p>
+                    </p>
                   )}
                   <div className="flex justify-end gap-2 mt-4">
                     <button
