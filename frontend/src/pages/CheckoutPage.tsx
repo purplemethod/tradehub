@@ -966,20 +966,22 @@ const CheckoutPage: React.FC = () => {
                       />
                       <span className="ml-2 text-sm text-gray-700">PIX</span>
                     </label>
-                    <label className={`flex items-center ${total < 500 ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="installment"
-                        checked={formData.paymentMethod === 'installment'}
-                        onChange={handleInputChange}
-                        disabled={total < 500}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">{t("checkout.installments")}</span>
-                    </label>
+                    {basketItems.some(item => item.product.allowInstallments) && (
+                      <label className={`flex items-center ${total < 500 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="installment"
+                          checked={formData.paymentMethod === 'installment'}
+                          onChange={handleInputChange}
+                          disabled={total < 500}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">{t("checkout.installments")}</span>
+                      </label>
+                    )}
                   </div>
-                  {total < 500 && (
+                  {total < 500 && basketItems.some(item => item.product.allowInstallments) && (
                     <p className="text-sm text-gray-500 mt-2">
                       {t("checkout.minInstallmentValue")}
                     </p>
