@@ -22,9 +22,10 @@ import MyFavoritesPage from "./pages/MyFavoritesPage";
 import { useUserRole } from "./hooks/useUserRole";
 import AuthGuard from "./pages/components/AuthGuard";
 import CouponManagementPage from "./pages/admin/CouponManagementPage";
+import InstallmentPaymentPage from "./pages/InstallmentPaymentPage";
 
 const AppContent: React.FC = () => {
-  const { isAdmin, canManageProducts } = useUserRole();
+  const { isAdmin, canManageProducts, isSeller } = useUserRole();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,7 +60,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/edit-product/:productId"
             element={
-              <AuthGuard requiredPermission={isAdmin}>
+              <AuthGuard requiredPermission={isAdmin || isSeller}>
                 <EditProductPage />
               </AuthGuard>
             }
@@ -110,6 +111,22 @@ const AppContent: React.FC = () => {
             element={
               <AuthGuard requiredPermission={isAdmin}>
                 <CouponManagementPage />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/installment-payments"
+            element={
+              <AuthGuard requiredPermission={isAdmin || isSeller}>
+                <InstallmentPaymentPage />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="admin/installment-payments/:orderId"
+            element={
+              <AuthGuard requiredPermission={isAdmin || isSeller}>
+                <InstallmentPaymentPage />
               </AuthGuard>
             }
           />

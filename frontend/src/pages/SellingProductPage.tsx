@@ -9,6 +9,7 @@ import { useBasket } from "./context/BasketContext";
 import { useFavorites } from "./context/FavoritesContext";
 import ImageModal from "./components/ImageModal";
 import noImage from "../assets/no-image.svg";
+import { UserRole } from "../types";
 
 const SellingProductPage: React.FC = () => {
   const { t } = useTranslation();
@@ -28,6 +29,24 @@ const SellingProductPage: React.FC = () => {
   >(null);
   const { addToBasket, getBasketItem } = useBasket();
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // Get unique categories from products and sort them
+  const categories = ["all", ...new Set(products.map(product => product.category))].sort();
+
+  // Filter products based on selected category
+  const filteredProducts = selectedCategory === "all" 
+    ? products 
+    : products.filter(product => product.category === selectedCategory);
+
+  // Function to get translated category name
+  const getTranslatedCategory = (category: string) => {
+    if (category === "all") return t("categories.all");
+    return t(`categories.${category.toLowerCase()}`) || category;
+  };
+
+  // Check if user can add products
+  const canAddProducts = userContext?.user?.role === UserRole.ADMIN || userContext?.user?.role === UserRole.SELLER;
 
   useEffect(() => {
     refreshProducts();
@@ -195,27 +214,50 @@ const SellingProductPage: React.FC = () => {
         <h1 className="text-2xl font-bold mb-6 text-gray-900">
           {t("products.sellingProducts")}
         </h1>
-        {/* <button
-          onClick={handleCreate}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          {t("products.addNew")}
-        </button> */}
+        <div className="flex items-center space-x-4">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="block w-48 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {getTranslatedCategory(category)}
+              </option>
+            ))}
+          </select>
+          {canAddProducts && (
+            <button
+              onClick={handleCreate}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              {t("products.addNew")}
+            </button>
+          )}
+        </div>
       </div>
 
-      {products.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">{t("products.noMyProducts")}</p>
-          <button
-            onClick={handleCreate}
-            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            {t("products.sell")}
-          </button>
+          <p className="text-gray-500 text-lg">
+            {selectedCategory === "all" 
+              ? t("products.noMyProducts")
+              : t("products.noProductsInCategory", { 
+                  category: getTranslatedCategory(selectedCategory)
+                })}
+          </p>
+          {canAddProducts && (
+            <button
+              onClick={handleCreate}
+              className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              {t("products.sell")}
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => {
+          {filteredProducts.map((product) => {
             const images = product.imageMetadataRef?.length
               ? product.imageMetadataRef
               : [];

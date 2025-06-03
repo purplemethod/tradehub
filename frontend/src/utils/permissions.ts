@@ -1,11 +1,13 @@
 import { UserRole } from "../types";
 
-
-export const hasPermission = (userRole: UserRole, requiredRole: UserRole): boolean => {
+export const hasPermission = (
+  userRole: UserRole,
+  requiredRole: UserRole
+): boolean => {
   const roleHierarchy = {
     [UserRole.ADMIN]: 3,
     [UserRole.SELLER]: 2,
-    [UserRole.BUYER]: 1
+    [UserRole.BUYER]: 1,
   };
 
   return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
@@ -14,6 +16,11 @@ export const hasPermission = (userRole: UserRole, requiredRole: UserRole): boole
 export const isAdmin = (userRole: UserRole): boolean => {
   return hasPermission(userRole, UserRole.ADMIN);
 };
+
+export const isSeller = (userRole: UserRole): boolean => {
+  return hasPermission(userRole, UserRole.SELLER);
+};
+
 export const canManageProducts = (userRole: UserRole): boolean => {
   return hasPermission(userRole, UserRole.SELLER);
 };
@@ -26,16 +33,29 @@ export const canManageUsers = (userRole: UserRole): boolean => {
   return hasPermission(userRole, UserRole.ADMIN);
 };
 
-export const canDeleteQuestions = (userRole: UserRole, isProductOwner: boolean): boolean => {
+export const canDeleteQuestions = (
+  userRole: UserRole,
+  isProductOwner: boolean
+): boolean => {
   return hasPermission(userRole, UserRole.ADMIN) || isProductOwner;
 };
 
-export const canUpdateProduct = (userRole: UserRole, isProductOwner: boolean): boolean => {
-  return hasPermission(userRole, UserRole.ADMIN) || 
-         (hasPermission(userRole, UserRole.SELLER) && isProductOwner);
+export const canUpdateProduct = (
+  userRole: UserRole,
+  isProductOwner: boolean
+): boolean => {
+  return (
+    hasPermission(userRole, UserRole.ADMIN) ||
+    (hasPermission(userRole, UserRole.SELLER) && isProductOwner)
+  );
 };
 
-export const canDeleteProduct = (userRole: UserRole, isProductOwner: boolean): boolean => {
-  return hasPermission(userRole, UserRole.ADMIN) || 
-         (hasPermission(userRole, UserRole.SELLER) && isProductOwner);
-}; 
+export const canDeleteProduct = (
+  userRole: UserRole,
+  isProductOwner: boolean
+): boolean => {
+  return (
+    hasPermission(userRole, UserRole.ADMIN) ||
+    (hasPermission(userRole, UserRole.SELLER) && isProductOwner)
+  );
+};

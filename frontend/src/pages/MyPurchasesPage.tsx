@@ -45,6 +45,9 @@ interface Order {
     nextPaymentDate: string;
     remainingInstallments: number;
     paidInstallments: number;
+    hasInterest: boolean;
+    interestRate: number;
+    totalWithInterest?: number;
   };
 }
 
@@ -72,7 +75,6 @@ const MyPurchasesPage: React.FC = () => {
           id: doc.id,
           ...doc.data()
         })) as Order[];
-
         setOrders(ordersData);
       } catch (err) {
         setError(t('orders.fetchError'));
@@ -166,6 +168,14 @@ const MyPurchasesPage: React.FC = () => {
                     value: order.installmentPayment.installmentValue.toFixed(2),
                     next: new Date(order.installmentPayment.nextPaymentDate).toLocaleDateString()
                   })}</p>
+                  {order.installmentPayment.hasInterest && (
+                    <p className="text-yellow-600 mt-1">
+                      {t('orders.interestInfo', {
+                        rate: (order.installmentPayment.interestRate * 100).toFixed(0),
+                        total: order.installmentPayment.totalWithInterest?.toFixed(2)
+                      })}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -198,7 +208,7 @@ const MyPurchasesPage: React.FC = () => {
             )}
 
             <div className="border-t border-gray-200 pt-4 mt-4">
-              <h3 className="font-medium mb-2">{t('orders.shippingAddress')}</h3>
+              <h3 className="font-medium mb-2">{t('orders.shippingInfo')}</h3>
               <p className="text-sm text-gray-600">
                 {order.shippingInfo.fullName}<br />
                 {order.shippingInfo.address}<br />

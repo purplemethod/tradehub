@@ -26,7 +26,7 @@ import { useTranslation } from "react-i18next";
 import { useBasket } from "./context/useBasket";
 import type { Product } from "../types";
 import LanguageSwitcher from "./components/LanguageSwitcher";
-import { isAdmin } from "../utils/permissions";
+import { isAdmin, isSeller } from "../utils/permissions";
 
 type BasketItem = {
   product: Product;
@@ -256,6 +256,13 @@ const BasketDrawer: React.FC<BasketDrawerProps> = ({
   );
 };
 
+interface NavigationItem {
+  name: string;
+  href: string;
+  current: boolean;
+  submenu?: NavigationItem[];
+}
+
 const NavBar: React.FC = () => {
   const { user, logout } = useContext(UserContext)!;
   const navigate = useNavigate();
@@ -264,28 +271,36 @@ const NavBar: React.FC = () => {
   const [isBasketOpen, setIsBasketOpen] = useState(false);
   const { t } = useTranslation();
 
-  const navigation = [
+  const navigation: NavigationItem[] = [
     { name: "nav.sellingProducts", href: "/home", current: false },
     { name: "nav.myFavorites", href: "/my-favorites", current: false },
     { name: "nav.myPurchases", href: "/my-purchases", current: false },
-    user?.role &&
-      isAdmin(user.role) && {
-        name: "nav.admin",
-        href: "#",
-        current: false,
-        submenu: [
-          {
-            name: "nav.myProducts",
-            href: "/my-products",
-            current: false,
-          },
-          {
+    ...(((user?.role && isAdmin(user.role)) ||
+      (user?.role && isSeller(user.role))) ? [{
+      name: "nav.admin",
+      href: "#",
+      current: false,
+      submenu: [
+        ((user?.role && isAdmin(user.role)) ||
+          (user?.role && isSeller(user.role))) && {
+          name: "nav.myProducts",
+          href: "/my-products",
+          current: false,
+        },
+        user?.role &&
+          isAdmin(user.role) && {
             name: "admin.coupons.title",
             href: "/admin/coupons",
             current: false,
           },
-        ],
-      },
+        ((user?.role && isAdmin(user.role)) ||
+          (user?.role && isSeller(user.role))) && {
+          name: "orders.installmentPayments",
+          href: "/admin/installment-payments",
+          current: false,
+        },
+      ].filter((item): item is NavigationItem => Boolean(item)),
+    }] : []),
   ];
 
   const handleLogout = async () => {
@@ -334,7 +349,11 @@ const NavBar: React.FC = () => {
                       (item) =>
                         item &&
                         (item.submenu ? (
-                          <Menu as="div" className="relative" key={item.name}>
+                          <Menu
+                            as="div"
+                            className="relative"
+                            key={`menu-${item.name}`}
+                          >
                             <MenuButton
                               className={`rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white flex items-center`}
                             >
@@ -342,21 +361,25 @@ const NavBar: React.FC = () => {
                               <ChevronDownIcon className="ml-1 h-4 w-4" />
                             </MenuButton>
                             <MenuItems className="absolute left-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none">
-                              {item.submenu.map((subItem) => (
-                                <MenuItem key={subItem.name}>
-                                  <Link
-                                    to={subItem.href}
-                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                  >
-                                    {t(subItem.name)}
-                                  </Link>
+                              {item.submenu?.map((subItem: NavigationItem) => (
+                                <MenuItem key={`submenu-${subItem.name}`}>
+                                  {({ active }) => (
+                                    <Link
+                                      to={subItem.href}
+                                      className={`block px-4 py-2 text-sm ${
+                                        active ? "bg-gray-100" : "text-gray-700"
+                                      }`}
+                                    >
+                                      {t(subItem.name)}
+                                    </Link>
+                                  )}
                                 </MenuItem>
                               ))}
                             </MenuItems>
                           </Menu>
                         ) : (
                           <Link
-                            key={item.name}
+                            key={`nav-${item.name}`}
                             to={item.href}
                             aria-current={item.current ? "page" : undefined}
                             className={`rounded-md px-3 py-2 text-sm font-medium ${
@@ -469,6 +492,14 @@ const NavBar: React.FC = () => {
                             {t("admin.coupons.title")}
                           </Link>
                         </MenuItem>
+                        <MenuItem>
+                          <Link
+                            to="/admin/installment-payments"
+                            className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
+                          >
+                            {t("orders.installmentPayments")}
+                          </Link>
+                        </MenuItem>
                       </>
                     )}
                     <MenuItem>
@@ -502,13 +533,13 @@ const NavBar: React.FC = () => {
                 (item) =>
                   item &&
                   (item.submenu ? (
-                    <div key={item.name} className="space-y-1">
+                    <div key={`mobile-menu-${item.name}`} className="space-y-1">
                       <div className="px-3 py-2 text-base font-medium text-gray-300">
                         {t(item.name)}
                       </div>
-                      {item.submenu.map((subItem) => (
+                      {item.submenu?.map((subItem: NavigationItem) => (
                         <DisclosureButton
-                          key={subItem.name}
+                          key={`mobile-submenu-${subItem.name}`}
                           as={Link}
                           to={subItem.href}
                           className="block pl-6 pr-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
@@ -519,7 +550,7 @@ const NavBar: React.FC = () => {
                     </div>
                   ) : (
                     <DisclosureButton
-                      key={item.name}
+                      key={`mobile-nav-${item.name}`}
                       as={Link}
                       to={item.href}
                       className={`block rounded-md px-3 py-2 text-base font-medium ${

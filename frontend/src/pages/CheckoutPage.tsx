@@ -113,6 +113,16 @@ interface OrderData {
     nextPaymentDate: string;
     remainingInstallments: number;
     paidInstallments: number;
+    hasInterest: boolean;
+    interestRate: number;
+    totalWithInterest: number;
+    paymentHistory: Array<{
+      installmentNumber: number;
+      paymentDate: string;
+      amount: number;
+      confirmedBy: string;
+      confirmedByEmail: string;
+    }>;
   };
 }
 
@@ -202,10 +212,7 @@ const CheckoutPage: React.FC = () => {
     if (!formData.phoneNumber.trim()) {
       errors.phoneNumber = t("checkout.validation.phoneRequired");
     } else if (!phoneNumberRegex.test(formData.phoneNumber)) {
-      errors.phoneNumber =
-        t("checkout.validation.phoneInvalid") +
-        ". " +
-        t("checkout.validation.phoneNumberFormat");
+      errors.phoneNumber = t("checkout.validation.phoneInvalid");
     }
 
     if (!formData.address.trim()) {
@@ -223,10 +230,7 @@ const CheckoutPage: React.FC = () => {
     if (!formData.zipCode.trim()) {
       errors.zipCode = t("checkout.validation.zipCodeRequired");
     } else if (!zipCodeRegex.test(formData.zipCode)) {
-      errors.zipCode =
-        t("checkout.validation.zipCodeInvalid") +
-        ". " +
-        t("checkout.validation.zipCodeFormat");
+      errors.zipCode = t("checkout.validation.zipCodeInvalid");
     }
 
     setFormErrors(errors);
@@ -271,78 +275,22 @@ const CheckoutPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
 
     if (!user) {
       showNotification(t("checkout.notifications.loginRequired"), "error");
       return;
     }
 
-    if (!validateForm()) {
-      // Get the first error message that exists
-      const firstErrorKey = Object.keys(formErrors).find(key => formErrors[key]);
-      if (firstErrorKey) {
-        showNotification(formErrors[firstErrorKey], "error");
-      } else {
-        showNotification(t("checkout.notifications.validationError"), "error");
-      }
-      return;
-    }
-
-    if (basketItems.length === 0) {
-      showNotification(t("checkout.notifications.emptyCart"), "error");
-      return;
-    }
-
+    setIsProcessing(true);
     try {
-      setIsProcessing(true);
-      showNotification(t("checkout.notifications.processingOrder"), "info");
-
-      // Check product availability and stock before proceeding
-      for (const item of basketItems) {
-        const productRef = doc(firestoreDB, "products", item.product.id);
-        const productDoc = await getDoc(productRef);
-
-        if (!productDoc.exists()) {
-          showNotification(
-            t("checkout.notifications.productNotFound", { name: item.product.name }),
-            "error"
-          );
-          setIsProcessing(false);
-          return;
-        }
-
-        const currentStock = productDoc.data().stock;
-        if (currentStock < item.stock) {
-          showNotification(
-            t("checkout.notifications.insufficientStock", {
-              name: item.product.name,
-              available: currentStock,
-              requested: item.stock
-            }),
-            "error"
-          );
-          setIsProcessing(false);
-          return;
-        }
-      }
-
-      // Update user data in Firestore with the latest information
-      const userRef = doc(firestoreDB, "users", user.id);
-      await updateDoc(userRef, {
-        phoneNumber: formData.phoneNumber,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        zipCode: formData.zipCode,
-      });
-
       // Generate PIX payment
       const pixData = await generatePixPayment({
         orderId: "", // Will be set after order creation
         userId: user.id,
         sellerId: basketItems[0]?.product.owner || "",
-        amount: total,
-        transactionId: `PIX-${Date.now()}`,
+        amount: Number(total),
+        transactionId: `PIX-${Date.now()}`
       });
 
       if (!pixData) {
@@ -362,9 +310,8 @@ const CheckoutPage: React.FC = () => {
 
       return pixData;
     } catch (error) {
-      console.error("Error in checkout process:", error);
-        showNotification(t("checkout.notifications.paymentError"), "error");
-      setCountdown(null); // Reset countdown on error
+      console.error("Error creating order:", error);
+      showNotification(t("orders.createError"), "error");
     } finally {
       setIsProcessing(false);
     }
@@ -394,7 +341,7 @@ const CheckoutPage: React.FC = () => {
     const pixKey = import.meta.env.VITE_PIX_KEY;
     const merchantName = import.meta.env.VITE_MERCHANT_NAME;
     const merchantCity = import.meta.env.VITE_MERCHANT_CITY;
-    const amount = total.toFixed(2);
+    const amount = total;
 
     // Merchant Account Information (26)
     const gui = "BR.GOV.BCB.PIX";
@@ -410,6 +357,9 @@ const CheckoutPage: React.FC = () => {
       .toString()
       .padStart(2, "0")}05${"03"}${referenceLabel}`;
 
+    // Format amount with 2 decimal places for PIX payload
+    const formattedAmount = amount.toFixed(2);
+
     // Build the payload
     let payload =
       "000201" +
@@ -417,8 +367,8 @@ const CheckoutPage: React.FC = () => {
       "52040000" +
       "5303986" +
       "54" +
-      amount.length.toString().padStart(2, "0") +
-      amount +
+      formattedAmount.length.toString().padStart(2, "0") +
+      formattedAmount +
       "5802BR" +
       "59" +
       merchantName.length.toString().padStart(2, "0") +
@@ -516,18 +466,22 @@ const CheckoutPage: React.FC = () => {
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
         ...(formData.paymentMethod === 'pix' ? {
-        pixPayment: {
-          pixPayload: pixPayload,
-          pixKey: pixKey,
-          expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+          pixPayment: {
+            pixPayload: pixPayload,
+            pixKey: pixKey,
+            expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
           }
         } : {
           installmentPayment: {
             installments: formData.installments,
-            installmentValue: total / formData.installments,
+            installmentValue: data.amount / formData.installments,
             nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
             remainingInstallments: formData.installments,
             paidInstallments: 0,
+            hasInterest: formData.installments > 6,
+            interestRate: formData.installments > 6 ? 0.02 : 0,
+            totalWithInterest: formData.installments > 6 ? data.amount * 1.02 : data.amount,
+            paymentHistory: []
           }
         }),
       };
@@ -594,15 +548,6 @@ const CheckoutPage: React.FC = () => {
 
       setPixPaymentData(pixPaymentData);
       showNotification(t("checkout.notifications.orderSuccess"), "success");
-      
-      // Show success notification for 3 seconds then redirect
-      setTimeout(() => {
-        clearBasket();
-        if (productContext?.refreshProducts) {
-          productContext.refreshProducts();
-        }
-        navigate("/my-purchases");
-      }, 3000);
 
       return pixPaymentData;
     } catch (error) {
@@ -1082,7 +1027,7 @@ const CheckoutPage: React.FC = () => {
                             orderId: pixPaymentData.orderId,
                             userId: user!.id,
                             sellerId: basketItems[0]?.product.owner || "",
-                            amount: total,
+                            amount: Number(total),
                             transactionId: pixPaymentData.transactionId!,
                           })
                         }
