@@ -87,6 +87,7 @@ interface OrderData {
     stock: number;
     price: number;
     total: number;
+    owner: string;
   }[];
   shippingInfo: {
     fullName: string;
@@ -282,7 +283,7 @@ const CheckoutPage: React.FC = () => {
       return;
     }
 
-    setIsProcessing(true);
+      setIsProcessing(true);
     try {
       // Generate PIX payment
       const pixData = await generatePixPayment({
@@ -450,6 +451,7 @@ const CheckoutPage: React.FC = () => {
           stock: item.stock,
           price: item.product.price,
           total: item.product.price * item.stock,
+          owner: item.product.owner,
         })),
         shippingInfo: {
           fullName: formData.fullName,
@@ -466,10 +468,10 @@ const CheckoutPage: React.FC = () => {
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
         ...(formData.paymentMethod === 'pix' ? {
-          pixPayment: {
-            pixPayload: pixPayload,
-            pixKey: pixKey,
-            expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        pixPayment: {
+          pixPayload: pixPayload,
+          pixKey: pixKey,
+          expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
           }
         } : {
           installmentPayment: {

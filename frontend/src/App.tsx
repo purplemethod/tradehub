@@ -23,6 +23,8 @@ import { useUserRole } from "./hooks/useUserRole";
 import AuthGuard from "./pages/components/AuthGuard";
 import CouponManagementPage from "./pages/admin/CouponManagementPage";
 import InstallmentPaymentPage from "./pages/InstallmentPaymentPage";
+import UserListPage from "./pages/admin/UserListPage";
+import ManageUserPage from "./pages/admin/ManageUserPage";
 
 const AppContent: React.FC = () => {
   const { isAdmin, canManageProducts, isSeller } = useUserRole();
@@ -127,6 +129,22 @@ const AppContent: React.FC = () => {
             element={
               <AuthGuard requiredPermission={isAdmin || isSeller}>
                 <InstallmentPaymentPage />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="admin/users/:userId"
+            element={
+              <AuthGuard requiredPermission={isAdmin}>
+                <ManageUserPage />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="admin/users"
+            element={
+              <AuthGuard requiredPermission={isAdmin}>
+                <UserListPage />
               </AuthGuard>
             }
           />

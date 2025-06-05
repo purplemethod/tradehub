@@ -319,31 +319,31 @@ const NewProductPage: React.FC = () => {
     }
 
     const filesArray = Array.from(files);
-    setSelectedFiles(filesArray);
-    const newProductImages: ProductImage[] = [];
+      setSelectedFiles(filesArray);
+      const newProductImages: ProductImage[] = [];
 
-    for (const file of filesArray) {
-      try {
-        const thumbnailBlob = await createThumbnail(file, 200);
-        const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
-        const dimensions = await getImageDimensions(file);
+      for (const file of filesArray) {
+        try {
+          const thumbnailBlob = await createThumbnail(file, 200);
+          const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
+          const dimensions = await getImageDimensions(file);
 
-        newProductImages.push({
-          file,
-          thumbnailUrl: thumbnailDataUrl,
-          fileInfo: {
-            name: file.name,
-            type: file.type,
-            size: formatFileSize(file.size),
-            estimatedChunks: calculateEstimatedChunks(file.size),
-            dimensions,
-          },
-        });
-      } catch (error) {
+          newProductImages.push({
+            file,
+            thumbnailUrl: thumbnailDataUrl,
+            fileInfo: {
+              name: file.name,
+              type: file.type,
+              size: formatFileSize(file.size),
+              estimatedChunks: calculateEstimatedChunks(file.size),
+              dimensions,
+            },
+          });
+        } catch (error) {
         console.error("Error processing image:", error);
+        }
       }
-    }
-    setMediaItems((prev) => [...prev, ...newProductImages]);
+      setMediaItems((prev) => [...prev, ...newProductImages]);
   };
 
   const handleGalleryChange = async (
@@ -366,30 +366,30 @@ const NewProductPage: React.FC = () => {
 
     const filesArray = Array.from(files);
     setSelectedFiles((prevFiles) => [...prevFiles, ...filesArray]);
-    const newProductImages: ProductImage[] = [];
+      const newProductImages: ProductImage[] = [];
 
-    for (const file of filesArray) {
-      try {
-        const thumbnailBlob = await createThumbnail(file, 200);
-        const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
-        const dimensions = await getImageDimensions(file);
+      for (const file of filesArray) {
+        try {
+          const thumbnailBlob = await createThumbnail(file, 200);
+          const thumbnailDataUrl = await blobToDataURL(thumbnailBlob);
+          const dimensions = await getImageDimensions(file);
 
-        newProductImages.push({
-          file,
-          thumbnailUrl: thumbnailDataUrl,
-          fileInfo: {
-            name: file.name,
-            type: file.type,
-            size: formatFileSize(file.size),
-            estimatedChunks: calculateEstimatedChunks(file.size),
-            dimensions,
-          },
-        });
-      } catch (error) {
+          newProductImages.push({
+            file,
+            thumbnailUrl: thumbnailDataUrl,
+            fileInfo: {
+              name: file.name,
+              type: file.type,
+              size: formatFileSize(file.size),
+              estimatedChunks: calculateEstimatedChunks(file.size),
+              dimensions,
+            },
+          });
+        } catch (error) {
         console.error("Error processing image:", error);
+        }
       }
-    }
-    setMediaItems((prev) => [...prev, ...newProductImages]);
+      setMediaItems((prev) => [...prev, ...newProductImages]);
   };
 
   const handleInputChange = (
@@ -669,7 +669,7 @@ const NewProductPage: React.FC = () => {
               <option value="">{t("products.selectCategory")}</option>
               <option value="electronics">
                 {t("products.categories.electronics")}
-              </option>
+                </option>
               <option value="clothing">
                 {t("products.categories.clothing")}
               </option>
@@ -702,7 +702,7 @@ const NewProductPage: React.FC = () => {
               <option value="">{t("products.selectCondition")}</option>
               <option value="new_sealed">
                 {t("products.conditions.new_sealed")}
-              </option>
+                </option>
               <option value="new">{t("products.conditions.new")}</option>
               <option value="like_new">
                 {t("products.conditions.like_new")}

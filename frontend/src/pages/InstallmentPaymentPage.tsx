@@ -15,24 +15,6 @@ import { firestoreDB } from "./utils/FirebaseConfig";
 import UserContext from "./context/UserContext";
 import { useNotification } from "./context/NotificationContext";
 
-interface InstallmentPayment {
-  installments: number;
-  installmentValue: number;
-  nextPaymentDate: string;
-  remainingInstallments: number;
-  paidInstallments: number;
-  hasInterest: boolean;
-  interestRate?: number;
-  totalWithInterest?: number;
-  paymentHistory: Array<{
-    installmentNumber: number;
-    paymentDate: string;
-    amount: number;
-    confirmedBy: string;
-    confirmedByEmail: string;
-  }>;
-}
-
 interface OrderItem {
   productId: string;
   name: string;
@@ -45,14 +27,51 @@ interface OrderItem {
 interface Order {
   id: string;
   userId: string;
-  userEmail?: string;
-  sellerId: string;
-  sellerEmail?: string;
-  items: OrderItem[];
-  total: number;
-  status: "pending" | "paid" | "shipped" | "delivered" | "cancelled";
+  userEmail: string;
+  items: {
+    productId: string;
+    name: string;
+    stock: number;
+    price: number;
+    total: number;
+    owner: string;
+  }[];
+  shippingInfo: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
   paymentMethod: "pix" | "installment";
-  installmentPayment?: InstallmentPayment;
+  total: number;
+  status: string;
+  createdAt: string;
+  expiresAt: string;
+  pixPayment?: {
+    pixPayload: string;
+    pixKey: string;
+    expiresAt: string;
+  };
+  installmentPayment?: {
+    installments: number;
+    installmentValue: number;
+    nextPaymentDate: string;
+    remainingInstallments: number;
+    paidInstallments: number;
+    hasInterest: boolean;
+    interestRate: number;
+    totalWithInterest: number;
+    paymentHistory: Array<{
+      installmentNumber: number;
+      paymentDate: string;
+      amount: number;
+      confirmedBy: string;
+      confirmedByEmail: string;
+    }>;
+  };
 }
 
 const InstallmentPaymentPage: React.FC = () => {
@@ -86,13 +105,17 @@ const InstallmentPaymentPage: React.FC = () => {
             const orderData = orderDoc.data();
             const userRef = doc(firestoreDB, "users", orderData.userId);
             const userDoc = await getDoc(userRef);
-            const userEmail = userDoc.exists() ? userDoc.data().email : "Unknown";
+            const userEmail = userDoc.exists()
+              ? userDoc.data().email
+              : "Unknown";
 
             const itemsWithSellerDetails = await Promise.all(
               orderData.items.map(async (item: OrderItem) => {
                 const productRef = doc(firestoreDB, "products", item.productId);
                 const productDoc = await getDoc(productRef);
-                const sellerEmail = productDoc.exists() ? productDoc.data().owner : "Unknown";
+                const sellerEmail = productDoc.exists()
+                  ? productDoc.data().owner
+                  : "Unknown";
                 return { ...item, sellerEmail };
               })
             );
@@ -135,7 +158,6 @@ const InstallmentPaymentPage: React.FC = () => {
                   productDoc.data().owner === userContext.user.email
                 ) {
                   isSellerOrder = true;
-                  console.log("order", order);
                   setOrder(order.id ? order : null);
                   break;
                 }
@@ -145,9 +167,8 @@ const InstallmentPaymentPage: React.FC = () => {
                 sellerOrders.push(order);
               }
             }
-
+            console.log("sellerOrders", sellerOrders);
             setOrders(sellerOrders);
-
             setIsLoading(false);
             return;
           } else {
@@ -263,11 +284,16 @@ const InstallmentPaymentPage: React.FC = () => {
                       {t("orders.orderNumber")}: {order.id}
                     </h2>
                     <p className="text-gray-600">
-                      {t("orders.total")}: {t("common.currency")}{order.total.toFixed(2)}
+                      {t("orders.total")}: {t("common.currency")}
+                      {order.total.toFixed(2)}
                     </p>
-                    {(userContext?.user?.role === "ADMIN" || userContext?.user?.role === "SELLER") && (
+                    {(userContext?.user?.role === "ADMIN" ||
+                      userContext?.user?.role === "SELLER") && (
                       <div className="mt-2 text-sm text-gray-600">
-                        <p>{t("orders.buyer")}: {order.userEmail || "Unknown"}</p>
+                        <p>
+                          {t("orders.buyer")}:{" "}
+                          {order?.shippingInfo?.email || "Unknown"}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -297,12 +323,16 @@ const InstallmentPaymentPage: React.FC = () => {
                           <p className="text-gray-500">
                             {t("products.quantity")}: {item.stock}
                           </p>
-                          {(userContext?.user?.role === "ADMIN" || userContext?.user?.role === "SELLER") && (
-                            <p className="text-gray-500">{t("orders.seller")}: {item.sellerEmail || "Unknown"}</p>
+                          {(userContext?.user?.role === "ADMIN" ||
+                            userContext?.user?.role === "SELLER") && (
+                            <p className="text-gray-500">
+                              {t("orders.seller")}: {item.owner || "Unknown"}
+                            </p>
                           )}
                         </div>
                         <p className="text-gray-900">
-                          {t("common.currency")}{item.total.toFixed(2)}
+                          {t("common.currency")}
+                          {item.total.toFixed(2)}
                         </p>
                       </div>
                     ))}
@@ -315,7 +345,8 @@ const InstallmentPaymentPage: React.FC = () => {
                       {t("orders.installmentInfo", {
                         current: order.installmentPayment.paidInstallments + 1,
                         total: order.installmentPayment.installments,
-                        value: order.installmentPayment.installmentValue.toFixed(2),
+                        value:
+                          order.installmentPayment.installmentValue.toFixed(2),
                         next: new Date(
                           order.installmentPayment.nextPaymentDate
                         ).toLocaleDateString(),
@@ -324,8 +355,12 @@ const InstallmentPaymentPage: React.FC = () => {
                     {order.installmentPayment.hasInterest && (
                       <p className="text-gray-600">
                         {t("orders.interestInfo", {
-                          rate: (order.installmentPayment.interestRate || 0) * 100,
-                          total: order.installmentPayment.totalWithInterest?.toFixed(2) || order.total.toFixed(2)
+                          rate:
+                            (order.installmentPayment.interestRate || 0) * 100,
+                          total:
+                            order.installmentPayment.totalWithInterest?.toFixed(
+                              2
+                            ) || order.total.toFixed(2),
                         })}
                       </p>
                     )}
@@ -381,11 +416,14 @@ const InstallmentPaymentPage: React.FC = () => {
                 {t("orders.orderNumber")}: {order.id}
               </p>
               <p className="text-gray-600">
-                {t("orders.total")}: {t("common.currency")}{order.total.toFixed(2)}
+                {t("orders.total")}: {t("common.currency")}
+                {order.total.toFixed(2)}
               </p>
               {(isAdmin || isSeller) && (
                 <div className="mt-2 text-sm text-gray-600">
-                  <p>{t("orders.buyer")}: {order.userEmail || "Unknown"}</p>
+                  <p>
+                    {t("orders.buyer")}: {order.userEmail || "Unknown"}
+                  </p>
                 </div>
               )}
             </div>
@@ -404,14 +442,18 @@ const InstallmentPaymentPage: React.FC = () => {
                         {t("products.quantity")}: {item.stock}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {t && t("products.price")}: {t("common.currency")}{item.price.toFixed(2)}
+                        {t && t("products.price")}: {t("common.currency")}
+                        {item.price.toFixed(2)}
                       </p>
                       {(isAdmin || isSeller) && (
-                        <p className="text-sm text-gray-500">{t("orders.seller")}: {item.sellerEmail || "Unknown"}</p>
+                        <p className="text-sm text-gray-500">
+                          {t("orders.seller")}: {item.owner || "Unknown"}
+                        </p>
                       )}
                     </div>
                     <p className="font-medium text-gray-900">
-                      {t("common.currency")}{item.total.toFixed(2)}
+                      {t("common.currency")}
+                      {item.total.toFixed(2)}
                     </p>
                   </div>
                 ))}
@@ -437,7 +479,9 @@ const InstallmentPaymentPage: React.FC = () => {
                   <p className="text-gray-600">
                     {t("orders.interestInfo", {
                       rate: (installmentPayment.interestRate || 0) * 100,
-                      total: installmentPayment.totalWithInterest?.toFixed(2) || order.total.toFixed(2)
+                      total:
+                        installmentPayment.totalWithInterest?.toFixed(2) ||
+                        order.total.toFixed(2),
                     })}
                   </p>
                 )}
@@ -477,8 +521,12 @@ const InstallmentPaymentPage: React.FC = () => {
                           {t("orders.installment")} {installment}
                         </span>
                         <span className="text-sm">
-                          {t("common.currency")}{installmentPayment.hasInterest && installment > 6 
-                            ? (installmentPayment.installmentValue * (1 + (installmentPayment.interestRate || 0))).toFixed(2)
+                          {t("common.currency")}
+                          {installmentPayment.hasInterest && installment > 6
+                            ? (
+                                installmentPayment.installmentValue *
+                                (1 + (installmentPayment.interestRate || 0))
+                              ).toFixed(2)
                             : installmentPayment.installmentValue.toFixed(2)}
                         </span>
                       </div>
@@ -519,9 +567,14 @@ const InstallmentPaymentPage: React.FC = () => {
                       <p className="text-blue-600 mb-4">
                         {t("orders.confirmPaymentDescription", {
                           installment: currentInstallment,
-                          amount: installmentPayment.hasInterest && currentInstallment > 6
-                            ? (installmentPayment.installmentValue * (1 + (installmentPayment.interestRate || 0))).toFixed(2)
-                            : installmentPayment.installmentValue.toFixed(2),
+                          amount:
+                            installmentPayment.hasInterest &&
+                            currentInstallment > 6
+                              ? (
+                                  installmentPayment.installmentValue *
+                                  (1 + (installmentPayment.interestRate || 0))
+                                ).toFixed(2)
+                              : installmentPayment.installmentValue.toFixed(2),
                         })}
                       </p>
                       <button

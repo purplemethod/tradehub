@@ -59,6 +59,8 @@
     "add": "Adicionar",
     "view": "Visualizar",
     "download": "Baixar",
+    "manage": "Gerenciar",
+    "name": "Nome",
     "upload": "Enviar",
     "import": "Importar",
     "export": "Exportar",
@@ -124,7 +126,6 @@
     "units": "Unidades",
     "scales": "Escalas",
     "ratings": "Avaliações",
-    "reviews": "Avaliações",
     "comments": "Comentários",
     "feedback": "Feedback",
     "suggestions": "Sugestões",
@@ -787,7 +788,8 @@
         "city": "Cidade",
         "state": "Estado",
         "country": "País",
-        "zipCode": "CEP"
+        "zipCode": "CEP",
+        "role": "Função"
       },
       "validation": {
         "nameRequired": "Nome é obrigatório",
@@ -906,6 +908,19 @@
         "saveFailed": "Falha ao salvar cupom",
         "deleteFailed": "Falha ao excluir cupom"
       }
+    },
+    "userManagement": {
+      "title": "Gerenciamento de Usuários",
+      "noUsers": "Nenhum usuário encontrado",
+      "manageUser": "Gerenciar Usuário",
+      "editUser": "Editar Usuário",
+      "selectUserError": "Nenhum usuário selecionado",
+      "userNotFound": "Usuário não encontrado"
+    },
+    "roles": {
+      "user": "Usuário",
+      "seller": "Vendedor",
+      "admin": "Administrador"
     }
   },
   "categories": {

@@ -59,6 +59,8 @@
     "add": "Add",
     "view": "View",
     "download": "Download",
+    "manage": "Manage",
+    "name": "Name",
     "upload": "Upload",
     "import": "Import",
     "export": "Export",
@@ -785,7 +787,8 @@
         "city": "City",
         "state": "State",
         "country": "Country",
-        "zipCode": "ZIP Code"
+        "zipCode": "ZIP Code",
+        "role": "Role"
       },
       "validation": {
         "nameRequired": "Name is required",
@@ -904,6 +907,19 @@
         "saveFailed": "Failed to save coupon",
         "deleteFailed": "Failed to delete coupon"
       }
+    },
+    "userManagement": {
+      "title": "User Management",
+      "noUsers": "No users found",
+      "manageUser": "Manage User",
+      "editUser": "Edit User",
+      "selectUserError": "No user selected",
+      "userNotFound": "User not found"
+    },
+    "roles": {
+      "user": "User",
+      "seller": "Seller",
+      "admin": "Admin"
     }
   },
   "categories": {

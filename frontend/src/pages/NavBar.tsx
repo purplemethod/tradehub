@@ -275,32 +275,42 @@ const NavBar: React.FC = () => {
     { name: "nav.sellingProducts", href: "/home", current: false },
     { name: "nav.myFavorites", href: "/my-favorites", current: false },
     { name: "nav.myPurchases", href: "/my-purchases", current: false },
-    ...(((user?.role && isAdmin(user.role)) ||
-      (user?.role && isSeller(user.role))) ? [{
-      name: "nav.admin",
-      href: "#",
-      current: false,
-      submenu: [
-        ((user?.role && isAdmin(user.role)) ||
-          (user?.role && isSeller(user.role))) && {
-          name: "nav.myProducts",
-          href: "/my-products",
-          current: false,
-        },
-        user?.role &&
-          isAdmin(user.role) && {
-            name: "admin.coupons.title",
-            href: "/admin/coupons",
+    ...((user?.role && isAdmin(user.role)) ||
+    (user?.role && isSeller(user.role))
+      ? [
+          {
+            name: "nav.admin",
+            href: "#",
             current: false,
+            submenu: [
+              ((user?.role && isAdmin(user.role)) ||
+                (user?.role && isSeller(user.role))) && {
+                name: "nav.myProducts",
+                href: "/my-products",
+                current: false,
+              },
+              ((user?.role && isAdmin(user.role)) ||
+                (user?.role && isSeller(user.role))) && {
+                name: "orders.installmentPayments",
+                href: "/admin/installment-payments",
+                current: false,
+              },
+              user?.role &&
+                isAdmin(user.role) && {
+                  name: "admin.coupons.title",
+                  href: "/admin/coupons",
+                  current: false,
+                },
+              user?.role &&
+                isAdmin(user.role) && {
+                  name: "admin.userManagement.title",
+                  href: "/admin/users",
+                  current: false,
+                },
+            ].filter((item): item is NavigationItem => Boolean(item)),
           },
-        ((user?.role && isAdmin(user.role)) ||
-          (user?.role && isSeller(user.role))) && {
-          name: "orders.installmentPayments",
-          href: "/admin/installment-payments",
-          current: false,
-        },
-      ].filter((item): item is NavigationItem => Boolean(item)),
-    }] : []),
+        ]
+      : []),
   ];
 
   const handleLogout = async () => {
@@ -471,25 +481,38 @@ const NavBar: React.FC = () => {
                         {t("orders.myPurchases")}
                       </Link>
                     </MenuItem>
-                    {user?.role && isAdmin(user.role) && (
+                    {((user?.role && isAdmin(user.role)) ||
+                      (user?.role && isSeller(user.role))) && (
                       <>
                         <div className="px-4 py-2 text-xs font-semibold text-gray-500">
                           {t("nav.admin")}
                         </div>
+                        {user?.role && isAdmin(user.role) && (
+                          <>
+                            <MenuItem>
+                              <Link
+                                to="/admin/coupons"
+                                className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
+                              >
+                                {t("admin.coupons.title")}
+                              </Link>
+                            </MenuItem>
+                            <MenuItem>
+                              <Link
+                                to="/admin/users"
+                                className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
+                              >
+                                {t("admin.userManagement.title")}
+                              </Link>
+                            </MenuItem>
+                          </>
+                        )}
                         <MenuItem>
                           <Link
                             to="/my-products"
                             className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                           >
                             {t("products.myProducts")}
-                          </Link>
-                        </MenuItem>
-                        <MenuItem>
-                          <Link
-                            to="/admin/coupons"
-                            className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
-                          >
-                            {t("admin.coupons.title")}
                           </Link>
                         </MenuItem>
                         <MenuItem>
