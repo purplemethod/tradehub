@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { firestoreDB } from './utils/FirebaseConfig';
-import { useContext } from 'react';
-import UserContext from './context/UserContext';
-import { QRCodeSVG } from 'qrcode.react';
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { firestoreDB } from "./utils/FirebaseConfig";
+import { useContext } from "react";
+import UserContext from "./context/UserContext";
+import { QRCodeSVG } from "qrcode.react";
 
 interface Order {
   id: string;
@@ -30,10 +30,10 @@ interface Order {
     cardName?: string;
   };
   total: number;
-  status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+  status: "pending" | "paid" | "shipped" | "delivered" | "cancelled";
   createdAt: string;
   paidAt?: string;
-  paymentMethod: 'pix' | 'installment';
+  paymentMethod: "pix" | "installment";
   pixPayment?: {
     pixPayload: string;
     pixKey: string;
@@ -63,22 +63,22 @@ const MyPurchasesPage: React.FC = () => {
       if (!user) return;
 
       try {
-        const ordersRef = collection(firestoreDB, 'orders');
+        const ordersRef = collection(firestoreDB, "orders");
         const q = query(
           ordersRef,
-          where('userId', '==', user.id),
-          orderBy('createdAt', 'desc')
+          where("userId", "==", user.id),
+          orderBy("createdAt", "desc")
         );
 
         const querySnapshot = await getDocs(q);
-        const ordersData = querySnapshot.docs.map(doc => ({
+        const ordersData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         })) as Order[];
         setOrders(ordersData);
       } catch (err) {
-        setError(t('orders.fetchError'));
-        console.error('Error fetching orders:', err);
+        setError(t("orders.fetchError"));
+        console.error("Error fetching orders:", err);
       } finally {
         setLoading(false);
       }
@@ -106,9 +106,9 @@ const MyPurchasesPage: React.FC = () => {
   if (orders.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">{t('orders.myPurchases')}</h1>
+        <h1 className="text-2xl font-bold mb-6">{t("orders.myPurchases")}</h1>
         <div className="text-center text-gray-600">
-          {t('orders.noPurchases')}
+          {t("orders.noPurchases")}
         </div>
       </div>
     );
@@ -116,38 +116,47 @@ const MyPurchasesPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">{t('orders.myPurchases')}</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("orders.myPurchases")}</h1>
       <div className="space-y-6">
         {orders.map((order) => (
           <div key={order.id} className="bg-white rounded-lg shadow-md p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h2 className="text-lg font-semibold">
-                  {t('orders.orderNumber')}: {order.id}
+                  {t("orders.orderNumber")}: {order.id}
                 </h2>
                 <p className="text-gray-600">
-                  {t('orders.orderDate')}: {new Date(order.createdAt).toLocaleDateString()}
+                  {t("orders.orderDate")}:{" "}
+                  {new Date(order.createdAt).toLocaleDateString()}
                 </p>
               </div>
               <div className="text-right">
-                <span className={`px-3 py-1 rounded-full text-sm ${
-                  order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                  order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                  order.status === 'paid' ? 'bg-yellow-100 text-yellow-800' :
-                  order.status === 'pending' ? 'bg-gray-100 text-gray-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    order.status === "delivered"
+                      ? "bg-green-100 text-green-800"
+                      : order.status === "shipped"
+                      ? "bg-blue-100 text-blue-800"
+                      : order.status === "paid"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : order.status === "pending"
+                      ? "bg-gray-100 text-gray-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
                   {t(`orders.status.${order.status}`)}
                 </span>
               </div>
             </div>
 
             <div className="border-t border-gray-200 pt-4">
-              <h3 className="font-medium mb-2">{t('orders.items')}</h3>
+              <h3 className="font-medium mb-2">{t("orders.items")}</h3>
               <div className="space-y-2">
                 {order.items.map((item, index) => (
                   <div key={index} className="flex justify-between text-sm">
-                    <span>{item.name} x {item.stock}</span>
+                    <span>
+                      {item.name} x {item.stock}
+                    </span>
                     <span>${item.total.toFixed(2)}</span>
                   </div>
                 ))}
@@ -156,33 +165,67 @@ const MyPurchasesPage: React.FC = () => {
 
             <div className="border-t border-gray-200 pt-4 mt-4">
               <div className="flex justify-between items-center">
-                <span className="font-medium">{t('orders.total')}</span>
+                <span className="font-medium">{t("orders.total")}</span>
                 <span className="font-bold">${order.total.toFixed(2)}</span>
               </div>
-              {order.paymentMethod === 'installment' && order.installmentPayment && (
-                <div className="mt-2 text-sm text-gray-600">
-                  <p>{t('orders.paymentMethod')}: {t('checkout.installments')}</p>
-                  <p>{t('orders.installmentInfo', {
-                    current: order.installmentPayment.paidInstallments,
-                    total: order.installmentPayment.installments,
-                    value: order.installmentPayment.installmentValue.toFixed(2),
-                    next: new Date(order.installmentPayment.nextPaymentDate).toLocaleDateString()
-                  })}</p>
-                  {order.installmentPayment.hasInterest && (
-                    <p className="text-yellow-600 mt-1">
-                      {t('orders.interestInfo', {
-                        rate: (order.installmentPayment.interestRate * 100).toFixed(0),
-                        total: order.installmentPayment.totalWithInterest?.toFixed(2)
+              {order.paymentMethod === "installment" &&
+                order.installmentPayment && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    <p>
+                      {t("orders.paymentMethod")}: {t("checkout.installments")}
+                    </p>
+                    <p>
+                      {t("orders.installmentInfo", {
+                        current: order.installmentPayment.paidInstallments,
+                        total: order.installmentPayment.installments,
+                        value:
+                          order.installmentPayment.installmentValue > 6
+                            ? (
+                                order.installmentPayment.installmentValue *
+                                (1 +
+                                  (order.installmentPayment.interestRate || 0))
+                              ).toFixed(2)
+                            : order.installmentPayment.installmentValue.toFixed(
+                                2
+                              ),
+                        next: new Date(
+                          order.installmentPayment.nextPaymentDate
+                        ).toLocaleDateString(),
                       })}
                     </p>
-                  )}
-                </div>
-              )}
+                    {order.installmentPayment.hasInterest && (
+                      <>
+                        <p className="text-yellow-600 mt-1">
+                          {t("orders.interestInfo", {
+                            rate: (
+                              order.installmentPayment.interestRate * 100
+                            ).toFixed(0),
+                            total:
+                              order.installmentPayment.totalWithInterest?.toFixed(
+                                2
+                              ),
+                          })}
+                        </p>
+                        <div className="flex justify-between items-center text-yellow-600">
+                          <span className="font-medium">
+                            {t("orders.total")}
+                          </span>
+                          <span className="font-bold">
+                            $
+                            {order.installmentPayment.totalWithInterest?.toFixed(
+                              2
+                            )}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
             </div>
 
-            {order.status === 'pending' && order.pixPayment && (
+            {order.status === "pending" && order.pixPayment && (
               <div className="border-t border-gray-200 pt-4 mt-4">
-                <h3 className="font-medium mb-4">{t('orders.pixPayment')}</h3>
+                <h3 className="font-medium mb-4">{t("orders.pixPayment")}</h3>
                 <div className="flex flex-col items-center bg-gray-50 p-4 rounded-lg">
                   <div className="w-48 h-48 mb-4">
                     <QRCodeSVG
@@ -194,13 +237,14 @@ const MyPurchasesPage: React.FC = () => {
                   </div>
                   <div className="text-center">
                     <p className="text-sm text-gray-600 mb-2">
-                      {t('orders.scanQRCode')}
+                      {t("orders.scanQRCode")}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {t('orders.pixKey')}: {order.pixPayment.pixKey}
+                      {t("orders.pixKey")}: {order.pixPayment.pixKey}
                     </p>
                     <p className="text-sm text-gray-600 mt-2">
-                      {t('orders.expiresAt')}: {new Date(order.pixPayment.expiresAt).toLocaleString()}
+                      {t("orders.expiresAt")}:{" "}
+                      {new Date(order.pixPayment.expiresAt).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -208,11 +252,15 @@ const MyPurchasesPage: React.FC = () => {
             )}
 
             <div className="border-t border-gray-200 pt-4 mt-4">
-              <h3 className="font-medium mb-2">{t('orders.shippingInfo')}</h3>
+              <h3 className="font-medium mb-2">{t("orders.shippingInfo")}</h3>
               <p className="text-sm text-gray-600">
-                {order.shippingInfo.fullName}<br />
-                {order.shippingInfo.address}<br />
-                {order.shippingInfo.city}, {order.shippingInfo.state} {order.shippingInfo.zipCode}<br />
+                {order.shippingInfo.fullName}
+                <br />
+                {order.shippingInfo.address}
+                <br />
+                {order.shippingInfo.city}, {order.shippingInfo.state}{" "}
+                {order.shippingInfo.zipCode}
+                <br />
                 {order.shippingInfo.phoneNumber}
               </p>
             </div>
@@ -223,4 +271,4 @@ const MyPurchasesPage: React.FC = () => {
   );
 };
 
-export default MyPurchasesPage; 
+export default MyPurchasesPage;
