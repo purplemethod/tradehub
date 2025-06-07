@@ -29,11 +29,11 @@ public class BracketValidator {
 
     // Exemplo de uso
     public static void main(String[] args) {
+        System.out.println(isValid("([)]")); // false
+        System.out.println("(()[]))[(]]])(]): " + isValid("(()[]))[(]]])(])")); // false
         System.out.println(isValid("()")); // true
         System.out.println(isValid("(((())))")); // true
         System.out.println(isValid("([])")); // true
-        System.out.println(isValid("([)]")); // false
-        System.out.println("(()[]))[(]]])(]): " + isValid("(()[]))[(]]])(])")); // false
         System.out.println("[()]:" + isValid("[()]")); // false
         System.out.println("[(]):" + isValid("[(])")); // false
         System.out.println(isValid("(")); // false

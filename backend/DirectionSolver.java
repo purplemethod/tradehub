@@ -5,18 +5,23 @@ public class DirectionSolver {
     enum Direction {
         RIGHT, DOWN, LEFT, UP;
 
-        Direction turnLeft()  { return values()[(ordinal() + 3) % 4]; }
-        Direction turnRight() { return values()[(ordinal() + 1) % 4]; }
+        Direction turnLeft() {
+            return values()[(ordinal() + 3) % 4];
+        }
+
+        Direction turnRight() {
+            return values()[(ordinal() + 1) % 4];
+        }
 
         int[] move(int x, int y, boolean forward) {
             int dx = 0, dy = 0;
             switch (this) {
                 case RIGHT -> dx = 1;
-                case LEFT  -> dx = -1;
-                case UP    -> dy = 1;
-                case DOWN  -> dy = -1;
+                case LEFT -> dx = -1;
+                case UP -> dy = 1;
+                case DOWN -> dy = -1;
             }
-            return new int[]{ x + (forward ? dx : -dx), y + (forward ? dy : -dy) };
+            return new int[] { x + (forward ? dx : -dx), y + (forward ? dy : -dy) };
         }
     }
 
@@ -32,10 +37,18 @@ public class DirectionSolver {
 
             for (String cmd : trial) {
                 switch (cmd) {
-                    case "FORWARD"     -> { int[] p = dir.move(x, y, true);  x = p[0]; y = p[1]; }
-                    case "BACK"        -> { int[] p = dir.move(x, y, false); x = p[0]; y = p[1]; }
-                    case "TURN LEFT"   -> dir = dir.turnLeft();
-                    case "TURN RIGHT"  -> dir = dir.turnRight();
+                    case "FORWARD" -> {
+                        int[] p = dir.move(x, y, true);
+                        x = p[0];
+                        y = p[1];
+                    }
+                    case "BACK" -> {
+                        int[] p = dir.move(x, y, false);
+                        x = p[0];
+                        y = p[1];
+                    }
+                    case "TURN LEFT" -> dir = dir.turnLeft();
+                    case "TURN RIGHT" -> dir = dir.turnRight();
                 }
             }
 
@@ -44,5 +57,12 @@ public class DirectionSolver {
         }
 
         return "No valid instruction found to reach the target.";
+    }
+
+    public static void main(String[] args) {
+        List<String> instructions = List.of("???", "FORWARD", "TURN LEFT", "FORWARD");
+        String expected = "The first instruction should be TURN LEFT to reach the target 0,1";
+
+        System.out.println(DirectionSolver.findMissingFirstInstruction(instructions, 0, 1));
     }
 }
