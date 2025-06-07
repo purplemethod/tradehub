@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useTranslation } from "react-i18next";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { firestoreDB } from "../utils/FirebaseConfig"; // Adjust path if necessary
 import UserContext from "../context/UserContext"; // Adjust path if necessary
 import { useParams, useNavigate } from "react-router-dom";
@@ -85,6 +85,24 @@ const ManageUserPage: React.FC = () => {
     }
   };
 
+  const handleDeleteUser = async () => {
+    if (!userProfile || !userContext?.user || userContext.user.role !== "ADMIN") return;
+
+    if (!window.confirm(t("admin.userManagement.deleteConfirmation"))) {
+      return;
+    }
+
+    try {
+      const userRef = doc(firestoreDB, "users", userProfile.id);
+      await deleteDoc(userRef);
+      showNotification(t("admin.userManagement.deleteSuccess"), "success");
+      navigate("/admin/users");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      showNotification(t("admin.userManagement.deleteError"), "error");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -146,13 +164,20 @@ const ManageUserPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 flex justify-between">
           <button
             onClick={handleSaveChanges}
             disabled={isSaving}
             className={`bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {isSaving ? t("common.saving") : t("common.saveChanges")}
+          </button>
+
+          <button
+            onClick={handleDeleteUser}
+            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+          >
+            {t("admin.userManagement.deleteUser")}
           </button>
         </div>
       </div>

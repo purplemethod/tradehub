@@ -632,7 +632,8 @@
       "notAuthenticated": "Você precisa estar logado para realizar esta ação",
       "cannotBuyOwnProduct": "Você não pode comprar seu próprio produto",
       "imageProcessingFailed": "Falha ao processar imagem colada",
-      "fetchFailed": "Falha ao buscar produtos. Por favor, tente novamente."
+      "fetchFailed": "Falha ao buscar produtos. Por favor, tente novamente.",
+      "invalidFile": "Formato de arquivo inválido. Por favor, selecione um arquivo de imagem válido."
     },
     "deleteQuestion": "Excluir Pergunta",
     "deleteQuestionConfirmation": "Tem certeza que deseja excluir esta pergunta?",
@@ -915,7 +916,11 @@
       "manageUser": "Gerenciar Usuário",
       "editUser": "Editar Usuário",
       "selectUserError": "Nenhum usuário selecionado",
-      "userNotFound": "Usuário não encontrado"
+      "userNotFound": "Usuário não encontrado",
+      "deleteUser": "Excluir Usuário",
+      "deleteConfirmation": "Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.",
+      "deleteSuccess": "Usuário excluído com sucesso",
+      "deleteError": "Falha ao excluir usuário"
     },
     "roles": {
       "user": "Usuário",

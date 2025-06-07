@@ -34,6 +34,7 @@ const EditProductPage: React.FC = () => {
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -282,10 +283,17 @@ const EditProductPage: React.FC = () => {
       return;
     }
 
-    setSelectedFiles(files);
+    // Ensure we have valid File objects
+    const validFiles = files.filter(file => file instanceof File);
+    if (validFiles.length !== files.length) {
+      showNotification(t("products.errors.invalidFiles"), "error");
+      return;
+    }
+
+    setSelectedFiles(validFiles);
 
     // Create preview URLs
-    const newPreviewUrls = files.map((file) => URL.createObjectURL(file));
+    const newPreviewUrls = validFiles.map((file) => URL.createObjectURL(file));
     setPreviewUrls((prev) => [...prev, ...newPreviewUrls]);
   };
 
@@ -467,6 +475,92 @@ const EditProductPage: React.FC = () => {
       setUploadProgress(0);
     }
   };
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    // Add a semi-transparent class to the dragged item
+    e.currentTarget.classList.add('opacity-50');
+  };
+
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    setDraggedIndex(null);
+    // Remove the semi-transparent class
+    e.currentTarget.classList.remove('opacity-50');
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+    // Create new arrays with the reordered items
+    const newPreviewUrls = [...previewUrls];
+    const newSelectedFiles = [...selectedFiles];
+    
+    // Remove the dragged item
+    const [draggedUrl] = newPreviewUrls.splice(draggedIndex, 1);
+    const [draggedFile] = newSelectedFiles.splice(draggedIndex, 1);
+    
+    // For existing images, we don't have File objects, so we skip the File validation
+    // Only validate File objects for newly added images
+    if (draggedFile && draggedFile instanceof File && !draggedFile.type.startsWith('image/')) {
+      showNotification(t("products.errors.invalidFile"), "error");
+      return;
+    }
+    
+    // Insert the dragged item at the target position
+    newPreviewUrls.splice(targetIndex, 0, draggedUrl);
+    if (draggedFile) {
+      newSelectedFiles.splice(targetIndex, 0, draggedFile);
+    }
+    
+    // Update the state
+    setPreviewUrls(newPreviewUrls);
+    setSelectedFiles(newSelectedFiles);
+
+    // Update the product's imageMetadataRef array to reflect the new order
+    if (product && product.imageMetadataRef) {
+      const newImageMetadataRef = [...product.imageMetadataRef];
+      const [movedMetadata] = newImageMetadataRef.splice(draggedIndex, 1);
+      newImageMetadataRef.splice(targetIndex, 0, movedMetadata);
+      
+      setProduct({
+        ...product,
+        imageMetadataRef: newImageMetadataRef
+      });
+    }
+
+    // Revoke the old object URL to prevent memory leaks
+    if (draggedUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(draggedUrl);
+    }
+  };
+
+  // Add cleanup for object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      // Cleanup object URLs when component unmounts
+      previewUrls.forEach(url => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [previewUrls]);
+
+  // Add validation for selectedFiles
+  useEffect(() => {
+    const validFiles = selectedFiles.filter(file => file instanceof File);
+    if (validFiles.length !== selectedFiles.length) {
+      setSelectedFiles(validFiles);
+      showNotification(t("products.errors.invalidFiles"), "error");
+    }
+  }, [selectedFiles, showNotification, t]);
 
   if (isLoading) {
     return (
@@ -803,7 +897,15 @@ const EditProductPage: React.FC = () => {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {previewUrls.map((url, index) => (
-                <div key={index} className="relative group">
+                <div
+                  key={index}
+                  className="relative group cursor-move"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, index)}
+                >
                   <img
                     src={url}
                     alt={t("products.imageAlt", { number: index + 1 })}
@@ -816,6 +918,9 @@ const EditProductPage: React.FC = () => {
                   >
                     <TrashIcon className="h-4 w-4" />
                   </button>
+                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                    {index + 1}
+                  </div>
                 </div>
               ))}
             </div>

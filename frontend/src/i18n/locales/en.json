@@ -636,7 +636,8 @@
       "notAuthenticated": "You must be logged in to perform this action",
       "cannotBuyOwnProduct": "You cannot buy your own product",
       "imageProcessingFailed": "Failed to process pasted image",
-      "fetchFailed": "Failed to fetch products. Please try again."
+      "fetchFailed": "Failed to fetch products. Please try again.",
+      "invalidFile": "Invalid file format. Please select a valid image file."
     },
     "deleteQuestion": "Delete Question",
     "deleteQuestionConfirmation": "Are you sure you want to delete this question?",
@@ -914,7 +915,11 @@
       "manageUser": "Manage User",
       "editUser": "Edit User",
       "selectUserError": "No user selected",
-      "userNotFound": "User not found"
+      "userNotFound": "User not found",
+      "deleteUser": "Delete User",
+      "deleteConfirmation": "Are you sure you want to delete this user? This action cannot be undone.",
+      "deleteSuccess": "User deleted successfully",
+      "deleteError": "Failed to delete user"
     },
     "roles": {
       "user": "User",

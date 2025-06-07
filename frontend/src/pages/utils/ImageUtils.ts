@@ -33,47 +33,56 @@ export const compressImage = async (
   quality: number
 ): Promise<Blob> => {
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
-    img.onload = () => {
-      let width = img.width;
-      let height = img.height;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
 
-      if (width > height) {
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
+        if (width > height) {
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxWidth) {
+            width = (width * maxWidth) / height;
+            height = maxWidth;
+          }
         }
-      } else {
-        if (height > maxWidth) {
-          width = (width * maxWidth) / height;
-          height = maxWidth;
-        }
-      }
 
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("Could not get canvas context"));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Could not get canvas context"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("Could not compress image"));
+            }
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+      img.onerror = () => reject(new Error("Could not load image"));
+      if (!event.target?.result || typeof event.target.result !== 'string') {
+        reject(new Error('Invalid file data'));
         return;
       }
-      ctx.drawImage(img, 0, 0, width, height);
-
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error("Could not compress image"));
-          }
-        },
-        "image/jpeg",
-        quality
-      );
+      img.src = event.target.result;
     };
-    img.onerror = () => reject(new Error("Could not load image"));
+    reader.onerror = () => reject(new Error("Could not read file"));
+    reader.readAsDataURL(file);
   });
 };
 
@@ -87,48 +96,57 @@ export const createThumbnail = async (
   maxWidth: number
 ): Promise<Blob> => {
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("Could not get canvas context"));
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Could not get canvas context"));
+          return;
+        }
+
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxWidth) {
+            width = (width * maxWidth) / height;
+            height = maxWidth;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("Could not create thumbnail"));
+            }
+          },
+          "image/jpeg",
+          0.7
+        );
+      };
+      img.onerror = () => reject(new Error("Could not load image"));
+      if (!event.target?.result || typeof event.target.result !== 'string') {
+        reject(new Error('Invalid file data'));
         return;
       }
-
-      let width = img.width;
-      let height = img.height;
-
-      if (width > height) {
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-      } else {
-        if (height > maxWidth) {
-          width = (width * maxWidth) / height;
-          height = maxWidth;
-        }
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-      ctx.drawImage(img, 0, 0, width, height);
-
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error("Could not create thumbnail"));
-          }
-        },
-        "image/jpeg",
-        0.7
-      );
+      img.src = event.target.result;
     };
-    img.onerror = () => reject(new Error("Could not load image"));
+    reader.onerror = () => reject(new Error("Could not read file"));
+    reader.readAsDataURL(file);
   });
 };
 
