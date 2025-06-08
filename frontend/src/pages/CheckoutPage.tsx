@@ -283,8 +283,20 @@ const CheckoutPage: React.FC = () => {
       return;
     }
 
-      setIsProcessing(true);
+    setIsProcessing(true);
     try {
+      // Update user's shipping information in Firestore
+      const userRef = doc(firestoreDB, "users", user.id);
+      await updateDoc(userRef, {
+        displayName: formData.fullName,
+        phoneNumber: formData.phoneNumber,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        updatedAt: new Date().toISOString()
+      });
+
       // Generate PIX payment
       const pixData = await generatePixPayment({
         orderId: "", // Will be set after order creation
