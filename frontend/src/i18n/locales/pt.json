@@ -880,6 +880,19 @@
   },
   "admin": {
     "accessDenied": "Acesso Negado",
+    "purchases": {
+      "title": "Todas as Compras",
+      "noOrders": "Nenhum pedido encontrado",
+      "orderId": "ID do Pedido",
+      "buyer": "Comprador",
+      "seller": "Vendedor",
+      "product": "Produto",
+      "quantity": "Quantidade",
+      "price": "Preço",
+      "paymentMethod": "Método de Pagamento",
+      "status": "Status",
+      "date": "Data"
+    },
     "coupons": {
       "title": "Gerenciamento de Cupons",
       "addNew": "Adicionar Novo Cupom",
@@ -959,5 +972,12 @@
     "shoes": "Calçados",
     "bags": "Bolsas e Carteiras",
     "accessories": "Acessórios de Moda"
+  },
+  "payment": {
+    "methods": {
+      "pix": "PIX",
+      "credit": "Cartão de Crédito",
+      "installment": "Parcelado"
+    }
   }
 }

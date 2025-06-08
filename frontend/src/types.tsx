@@ -72,3 +72,33 @@ export enum UserRole {
 export interface UserWithPrivateData extends UserProfile {
   isEmailPrivate: boolean;
 } 
+
+export interface OrderItem {
+  productId: string;
+  name: string;
+  quantity: number;
+  price: number;
+  stock: number;
+  owner: string;
+}
+
+export interface Order {
+  id: string;
+  userId: string;
+  userEmail: string;
+  items: OrderItem[];
+  total: number;
+  status: 'pending' | 'completed' | 'cancelled';
+  paymentMethod: 'pix' | 'credit' | 'installment';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  shippingInfo?: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
+} 

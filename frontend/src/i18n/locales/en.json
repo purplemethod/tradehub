@@ -879,6 +879,19 @@
   },
   "admin": {
     "accessDenied": "Access Denied",
+    "purchases": {
+      "title": "All Purchases",
+      "noOrders": "No orders found",
+      "orderId": "Order ID",
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "product": "Product",
+      "quantity": "Quantity",
+      "price": "Price",
+      "paymentMethod": "Payment Method",
+      "status": "Status",
+      "date": "Date"
+    },
     "coupons": {
       "title": "Coupon Management",
       "addNew": "Add New Coupon",
@@ -958,5 +971,12 @@
     "shoes": "Shoes",
     "bags": "Bags & Wallets",
     "accessories": "Fashion Accessories"
+  },
+  "payment": {
+    "methods": {
+      "pix": "PIX",
+      "credit": "Credit Card",
+      "installment": "Installment"
+    }
   }
 }

@@ -307,6 +307,12 @@ const NavBar: React.FC = () => {
                   href: "/admin/users",
                   current: false,
                 },
+              user?.role &&
+                isAdmin(user.role) && {
+                  name: "admin.purchases.title",
+                  href: "/admin/purchases",
+                  current: false,
+                },
             ].filter((item): item is NavigationItem => Boolean(item)),
           },
         ]
@@ -503,6 +509,14 @@ const NavBar: React.FC = () => {
                                 className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                               >
                                 {t("admin.userManagement.title")}
+                              </Link>
+                            </MenuItem>
+                            <MenuItem>
+                              <Link
+                                to="/admin/purchases"
+                                className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
+                              >
+                                {t("admin.purchases.title")}
                               </Link>
                             </MenuItem>
                           </>
