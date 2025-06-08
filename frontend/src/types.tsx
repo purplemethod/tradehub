@@ -101,4 +101,22 @@ export interface Order {
     state: string;
     zipCode: string;
   };
+}
+
+export interface Coupon {
+  code: string;
+  discountType: 'percentage' | 'fixed' | 'installment';
+  discountValue: number;
+  isActive: boolean;
+  expiresAt?: Timestamp;
+  minimumPurchase?: number;
+  productIds?: string[];
+  maxUses?: number;
+  currentUses?: number;
+  minInstallments?: number;
+  maxInstallments?: number;
+  installmentDiscount?: {
+    type: 'percentage' | 'fixed';
+    value: number;
+  };
 } 

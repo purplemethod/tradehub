@@ -402,13 +402,16 @@
       "stateRequired": "State is required",
       "zipCodeRequired": "ZIP code is required",
       "zipCodeInvalid": "Please enter a valid ZIP code",
-      "couponRequired": "Coupon code is required",
+      "couponRequired": "Please enter a coupon code",
       "invalidCoupon": "Invalid coupon code",
       "expiredCoupon": "This coupon has expired",
-      "minimumPurchase": "Minimum purchase amount of ${{amount}} required",
+      "minimumPurchase": "Minimum purchase amount of {{amount}} required",
       "couponLimitReached": "This coupon has reached its usage limit",
-      "couponNotEligible": "This coupon is not eligible for your cart items",
-      "couponError": "Error applying coupon"
+      "couponNotEligible": "This coupon is not valid for any items in your cart",
+      "couponError": "Error applying coupon",
+      "installmentRequired": "This coupon requires installment payment",
+      "minInstallments": "This coupon requires at least {{installments}} installments",
+      "maxInstallments": "This coupon is valid for up to {{installments}} installments"
     },
     "notifications": {
       "orderSuccess": "Order placed successfully!",
@@ -431,14 +434,24 @@
       "processingOrder": "Processing your order...",
       "processingPayment": "Processing your payment...",
       "couponApplied": "Coupon applied successfully",
-      "couponError": "Error applying coupon",
+      "couponRemoved": "Coupon removed successfully",
       "pixCopied": "PIX code copied to clipboard",
       "pixError": "Error copying PIX code",
       "pixExpired": "PIX code has expired",
       "pixWaiting": "Waiting for PIX payment confirmation",
       "pixConfirmed": "PIX payment confirmed",
       "pixFailed": "PIX payment failed"
-    }
+    },
+    "summary": {
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "shipping": "Shipping",
+      "free": "Free",
+      "total": "Total",
+      "couponApplied": "Coupon Applied",
+      "installmentFee": "Installment Fee"
+    },
+    "removeCoupon": "Remove coupon"
   },
   "products": {
     "title": "Products",
@@ -910,6 +923,11 @@
       "expires": "Expires",
       "percentage": "Percentage",
       "fixed": "Fixed Amount",
+      "installment": "Installment",
+      "minInstallments": "Minimum Installments",
+      "maxInstallments": "Maximum Installments",
+      "installmentDiscountType": "Installment Discount Type",
+      "installmentDiscountValue": "Installment Discount Value",
       "deleteConfirmation": "Are you sure you want to delete this coupon?",
       "notifications": {
         "createSuccess": "Coupon created successfully",

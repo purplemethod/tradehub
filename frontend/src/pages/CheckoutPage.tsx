@@ -69,7 +69,7 @@ interface PixPaymentData {
 
 interface Coupon {
   code: string;
-  discountType: 'percentage' | 'fixed';
+  discountType: 'percentage' | 'fixed' | 'installment';
   discountValue: number;
   isActive: boolean;
   expiresAt?: Timestamp;
@@ -77,6 +77,7 @@ interface Coupon {
   productIds?: string[]; // Array of product IDs this coupon applies to
   maxUses?: number;
   currentUses?: number;
+  maxInstallments?: number;
 }
 
 interface OrderData {
@@ -140,6 +141,7 @@ const CheckoutPage: React.FC = () => {
   const { t } = useTranslation();
   const [countdown, setCountdown] = useState<number | null>(null);
   const [discount, setDiscount] = useState<number>(0);
+  const [installmentFee, setInstallmentFee] = useState(0);
   const [couponError, setCouponError] = useState<string>("");
   const [appliedCouponRef, setAppliedCouponRef] = useState<DocumentReference | null>(null);
 
@@ -198,7 +200,7 @@ const CheckoutPage: React.FC = () => {
   const total = basketItems.reduce(
     (sum, item) => sum + item.product.price * item.stock,
     0
-  ) - discount;
+  ) - discount + installmentFee;
 
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
@@ -619,6 +621,7 @@ const CheckoutPage: React.FC = () => {
         setCouponError(t("checkout.validation.invalidCoupon"));
         setDiscount(0);
         setAppliedCouponRef(null);
+        setInstallmentFee(0);
         return;
       }
 
@@ -630,6 +633,7 @@ const CheckoutPage: React.FC = () => {
         setCouponError(t("checkout.validation.expiredCoupon"));
         setDiscount(0);
         setAppliedCouponRef(null);
+        setInstallmentFee(0);
         return;
       }
 
@@ -638,15 +642,41 @@ const CheckoutPage: React.FC = () => {
         setCouponError(t("checkout.validation.minimumPurchase", { amount: couponData.minimumPurchase }));
         setDiscount(0);
         setAppliedCouponRef(null);
+        setInstallmentFee(0);
         return;
-    }
+      }
 
       // Check if coupon has reached maximum uses
       if (couponData.maxUses && couponData.currentUses && couponData.currentUses >= couponData.maxUses) {
         setCouponError(t("checkout.validation.couponLimitReached"));
         setDiscount(0);
         setAppliedCouponRef(null);
+        setInstallmentFee(0);
         return;
+      }
+
+      // Check if coupon is installment-specific and payment method is PIX
+      if (couponData.discountType === 'installment' && formData.paymentMethod === 'pix') {
+        setCouponError(t("checkout.validation.installmentCouponPixError"));
+        setDiscount(0);
+        setAppliedCouponRef(null);
+        setInstallmentFee(0);
+        return;
+      }
+
+      // If coupon is installment-specific and payment method is installment
+      if (couponData.discountType === 'installment' && formData.paymentMethod === 'installment') {
+        // Check if current installments exceed coupon's max installments
+        if (couponData.maxInstallments && formData.installments > couponData.maxInstallments) {
+          setCouponError(t("checkout.validation.maxInstallmentsExceeded", { max: couponData.maxInstallments }));
+          setDiscount(0);
+          setAppliedCouponRef(null);
+          setInstallmentFee(0);
+          return;
+        }
+
+        // If installments are within limit, remove the installment fee
+        setInstallmentFee(0);
       }
 
       // Calculate discount
@@ -662,6 +692,7 @@ const CheckoutPage: React.FC = () => {
           setCouponError(t("checkout.validation.couponNotEligible"));
           setDiscount(0);
           setAppliedCouponRef(null);
+          setInstallmentFee(0);
           return;
         }
 
@@ -674,7 +705,7 @@ const CheckoutPage: React.FC = () => {
           discountAmount = (eligibleTotal * couponData.discountValue) / 100;
         } else {
           discountAmount = couponData.discountValue;
-            }
+        }
       } else {
         // Generic coupon
         if (couponData.discountType === "percentage") {
@@ -689,15 +720,33 @@ const CheckoutPage: React.FC = () => {
 
       setDiscount(discountAmount);
       setCouponError("");
-      setAppliedCouponRef(couponDoc.ref); // Store coupon ref for later use
+      setAppliedCouponRef(couponDoc.ref);
       showNotification(t("checkout.notifications.couponApplied"), "success");
     } catch (error) {
       console.error("Error applying coupon:", error);
       setCouponError(t("checkout.validation.couponError"));
       setDiscount(0);
       setAppliedCouponRef(null);
+      setInstallmentFee(0);
     }
   };
+
+  const handleRemoveCoupon = () => {
+    setDiscount(0);
+    setCouponError("");
+    setAppliedCouponRef(null);
+    showNotification(t("checkout.notifications.couponRemoved"), "success");
+  };
+
+  useEffect(() => {
+    const base = total - discount;
+    if (formData.installments > 6) {
+      const feePercentage = (formData.installments - 6) * 0.02;
+      setInstallmentFee(base * feePercentage);
+    } else {
+      setInstallmentFee(0);
+    }
+  }, [formData.installments, total, discount]);
 
   if (!basketItems || basketItems.length === 0) {
     return (
@@ -1196,12 +1245,39 @@ const CheckoutPage: React.FC = () => {
                 </p>
               </div>
             ))}
+            {/* Discount and Coupon */}
             {discount > 0 && (
-              <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <p>{t("common.discount")}</p>
-                <p>-R${discount.toFixed(2)}</p>
+              <div className="flex justify-between items-center text-sm bg-green-50 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-600">{t("checkout.summary.discount")}</span>
+                  {formData.couponCode && (
+                    <span className="text-green-800 font-medium bg-green-100 rounded px-2 py-1 text-xs">{formData.couponCode}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-green-600 font-medium">-R${discount.toFixed(2)}</span>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="text-green-600 hover:text-green-800 p-1.5 rounded-full hover:bg-green-100 transition-colors"
+                    title={t("checkout.removeCoupon")}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             )}
+
+            {/* Installment Fee */}
+            {installmentFee > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">{t("checkout.summary.installmentFee")}</span>
+                <span className="text-gray-900 font-medium">+R${installmentFee.toFixed(2)}</span>
+              </div>
+            )}
+
             <div className="border-t pt-4">
               <div className="flex justify-between text-base font-medium text-gray-900">
                 <p>{t("common.total")}</p>

@@ -390,13 +390,18 @@
       "stateRequired": "Estado é obrigatório",
       "zipCodeRequired": "CEP é obrigatório",
       "zipCodeInvalid": "Por favor, insira um CEP válido",
-      "couponRequired": "Código do cupom é obrigatório",
+      "couponRequired": "Por favor, insira um código de cupom",
       "invalidCoupon": "Código de cupom inválido",
       "expiredCoupon": "Este cupom expirou",
-      "minimumPurchase": "Valor mínimo de compra de R${{amount}} necessário",
+      "minimumPurchase": "Valor mínimo de compra de {{amount}} necessário",
       "couponLimitReached": "Este cupom atingiu seu limite de uso",
-      "couponNotEligible": "Este cupom não é válido para os itens do seu carrinho",
-      "couponError": "Erro ao aplicar cupom"
+      "couponNotEligible": "Este cupom não é válido para nenhum item no seu carrinho",
+      "couponError": "Erro ao aplicar cupom",
+      "installmentRequired": "Este cupom requer pagamento parcelado",
+      "minInstallments": "Este cupom requer pelo menos {{installments}} parcelas",
+      "maxInstallments": "Este cupom é válido para até {{installments}} parcelas",
+      "installmentCouponPixError": "Este cupom só pode ser usado com pagamento parcelado",
+      "maxInstallmentsExceeded": "Este cupom permite no máximo {{max}} parcelas"
     },
     "notifications": {
       "orderSuccess": "Pedido realizado com sucesso!",
@@ -425,7 +430,8 @@
       "pixExpired": "Código PIX expirado",
       "pixWaiting": "Aguardando confirmação do pagamento PIX",
       "pixConfirmed": "Pagamento PIX confirmado",
-      "pixFailed": "Pagamento PIX falhou"
+      "pixFailed": "Pagamento PIX falhou",
+      "couponRemoved": "Cupom removido com sucesso"
     },
     "installments": "Parcelamento",
     "installmentsInfo": "Pague em até 10x sem juros",
@@ -435,7 +441,17 @@
     "installmentValue": "Valor da parcela",
     "totalWithInstallments": "Total com parcelamento",
     "installmentTotal": "Valor total",
-    "interest": "juros"
+    "interest": "juros",
+    "summary": {
+      "subtotal": "Subtotal",
+      "discount": "Desconto",
+      "shipping": "Frete",
+      "free": "Grátis",
+      "total": "Total",
+      "couponApplied": "Cupom Aplicado",
+      "installmentFee": "Taxa de Parcelamento"
+    },
+    "removeCoupon": "Remover cupom"
   },
   "products": {
     "title": "Produtos",
@@ -911,6 +927,11 @@
       "expires": "Expira",
       "percentage": "Porcentagem",
       "fixed": "Valor Fixo",
+      "installment": "Parcelamento",
+      "minInstallments": "Parcelas Mínimas",
+      "maxInstallments": "Parcelas Máximas",
+      "installmentDiscountType": "Tipo de Desconto no Parcelamento",
+      "installmentDiscountValue": "Valor do Desconto no Parcelamento",
       "deleteConfirmation": "Tem certeza que deseja excluir este cupom?",
       "notifications": {
         "createSuccess": "Cupom criado com sucesso",

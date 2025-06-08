@@ -16,7 +16,7 @@ import { firestoreDB } from "../utils/FirebaseConfig";
 interface Coupon {
   id: string;
   code: string;
-  discountType: "percentage" | "fixed";
+  discountType: "percentage" | "fixed" | "installment";
   discountValue: number;
   isActive: boolean;
   expiresAt: Timestamp;
@@ -24,6 +24,12 @@ interface Coupon {
   maxUses: number;
   currentUses: number;
   productIds?: string[];
+  minInstallments: number;
+  maxInstallments: number;
+  installmentDiscount: {
+    type: "percentage" | "fixed";
+    value: number;
+  };
 }
 
 const CouponManagementPage: React.FC = () => {
@@ -35,13 +41,19 @@ const CouponManagementPage: React.FC = () => {
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [formData, setFormData] = useState({
     code: "",
-    discountType: "percentage" as "percentage" | "fixed",
+    discountType: "percentage" as "percentage" | "fixed" | "installment",
     discountValue: 0,
     isActive: true,
     expiresAt: "",
     minimumPurchase: 0,
     maxUses: 0,
     productIds: [] as string[],
+    minInstallments: 6,
+    maxInstallments: 12,
+    installmentDiscount: {
+      type: "percentage" as "percentage" | "fixed",
+      value: 0
+    }
   });
 
   useEffect(() => {
@@ -73,6 +85,11 @@ const CouponManagementPage: React.FC = () => {
         ...formData,
         expiresAt: Timestamp.fromDate(new Date(formData.expiresAt)),
         currentUses: editingCoupon?.currentUses || 0,
+        ...(formData.discountType === 'installment' ? {
+          minInstallments: formData.minInstallments,
+          maxInstallments: formData.maxInstallments,
+          installmentDiscount: formData.installmentDiscount
+        } : {})
       };
 
       if (editingCoupon) {
@@ -134,6 +151,9 @@ const CouponManagementPage: React.FC = () => {
       minimumPurchase: coupon.minimumPurchase,
       maxUses: coupon.maxUses,
       productIds: coupon.productIds || [],
+      minInstallments: coupon.minInstallments,
+      maxInstallments: coupon.maxInstallments,
+      installmentDiscount: coupon.installmentDiscount,
     });
     setIsModalOpen(true);
   };
@@ -148,6 +168,12 @@ const CouponManagementPage: React.FC = () => {
       minimumPurchase: 0,
       maxUses: 0,
       productIds: [],
+      minInstallments: 6,
+      maxInstallments: 12,
+      installmentDiscount: {
+        type: "percentage",
+        value: 0
+      }
     });
   };
 
@@ -218,7 +244,9 @@ const CouponManagementPage: React.FC = () => {
                     <p className="flex items-center text-sm text-gray-500">
                       {coupon.discountType === "percentage"
                         ? `${coupon.discountValue}%`
-                        : `${t("common.currency")}${coupon.discountValue}`}
+                        : coupon.discountType === "fixed"
+                        ? `${t("common.currency")}${coupon.discountValue}`
+                        : `${t("admin.coupons.installment")} ${coupon.minInstallments}-${coupon.maxInstallments}`}
                     </p>
                     <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
                       {t("admin.coupons.uses")}: {coupon.currentUses}/
@@ -280,9 +308,7 @@ const CouponManagementPage: React.FC = () => {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          discountType: e.target.value as
-                            | "percentage"
-                            | "fixed",
+                          discountType: e.target.value as "percentage" | "fixed" | "installment",
                         })
                       }
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -291,27 +317,116 @@ const CouponManagementPage: React.FC = () => {
                         {t("admin.coupons.percentage")}
                       </option>
                       <option value="fixed">{t("admin.coupons.fixed")}</option>
+                      <option value="installment">{t("admin.coupons.installment")}</option>
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      {t("admin.coupons.discountValue")}
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.discountValue}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          discountValue: Number(e.target.value),
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      required
-                      min="0"
-                    />
-                  </div>
+                  {formData.discountType === 'installment' ? (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          {t("admin.coupons.minInstallments")}
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.minInstallments}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              minInstallments: Number(e.target.value),
+                            })
+                          }
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          required
+                          min="1"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          {t("admin.coupons.maxInstallments")}
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.maxInstallments}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              maxInstallments: Number(e.target.value),
+                            })
+                          }
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          required
+                          min={formData.minInstallments}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          {t("admin.coupons.installmentDiscountType")}
+                        </label>
+                        <select
+                          value={formData.installmentDiscount.type}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              installmentDiscount: {
+                                ...formData.installmentDiscount,
+                                type: e.target.value as "percentage" | "fixed"
+                              }
+                            })
+                          }
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        >
+                          <option value="percentage">
+                            {t("admin.coupons.percentage")}
+                          </option>
+                          <option value="fixed">{t("admin.coupons.fixed")}</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          {t("admin.coupons.installmentDiscountValue")}
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.installmentDiscount.value}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              installmentDiscount: {
+                                ...formData.installmentDiscount,
+                                value: Number(e.target.value)
+                              }
+                            })
+                          }
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          required
+                          min="0"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        {t("admin.coupons.discountValue")}
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.discountValue}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            discountValue: Number(e.target.value),
+                          })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        required
+                        min="0"
+                      />
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
