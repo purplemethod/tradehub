@@ -660,7 +660,6 @@ const CheckoutPage: React.FC = () => {
         setCouponError(t("checkout.validation.installmentCouponPixError"));
         setDiscount(0);
         setAppliedCouponRef(null);
-        setInstallmentFee(0);
         return;
       }
 
@@ -671,12 +670,8 @@ const CheckoutPage: React.FC = () => {
           setCouponError(t("checkout.validation.maxInstallmentsExceeded", { max: couponData.maxInstallments }));
           setDiscount(0);
           setAppliedCouponRef(null);
-          setInstallmentFee(0);
           return;
         }
-
-        // If installments are within limit, remove the installment fee
-        setInstallmentFee(0);
       }
 
       // Calculate discount
@@ -692,7 +687,6 @@ const CheckoutPage: React.FC = () => {
           setCouponError(t("checkout.validation.couponNotEligible"));
           setDiscount(0);
           setAppliedCouponRef(null);
-          setInstallmentFee(0);
           return;
         }
 
@@ -721,6 +715,12 @@ const CheckoutPage: React.FC = () => {
       setDiscount(discountAmount);
       setCouponError("");
       setAppliedCouponRef(couponDoc.ref);
+
+      // Only set installment fee to 0 after all validations pass and coupon is successfully applied
+      if (couponData.discountType === 'installment' && formData.paymentMethod === 'installment') {
+        setInstallmentFee(0);
+      }
+
       showNotification(t("checkout.notifications.couponApplied"), "success");
     } catch (error) {
       console.error("Error applying coupon:", error);
@@ -740,13 +740,18 @@ const CheckoutPage: React.FC = () => {
 
   useEffect(() => {
     const base = total - discount;
-    if (formData.installments > 6) {
+    // Check if there's an active installment coupon
+    const hasInstallmentCoupon = appliedCouponRef && formData.paymentMethod === 'installment';
+    
+    if (hasInstallmentCoupon) {
+      setInstallmentFee(0);
+    } else if (formData.installments > 6) {
       const feePercentage = (formData.installments - 6) * 0.02;
       setInstallmentFee(base * feePercentage);
     } else {
       setInstallmentFee(0);
     }
-  }, [formData.installments, total, discount]);
+  }, [formData.installments, total, discount, appliedCouponRef, formData.paymentMethod]);
 
   if (!basketItems || basketItems.length === 0) {
     return (
@@ -1132,24 +1137,30 @@ const CheckoutPage: React.FC = () => {
                               )
                             )
                           );
-                          return Array.from({ length: maxAllowedInstallments }, (_, i) => i + 1).map((num) => {
-                            let installmentValue = total / num;
-                            let displayTotal = total;
-                            
-                            // Add 2% interest for installments beyond 5x
-                            if (num > 6) {
-                              const interestRate = 0.02;
-                              displayTotal = total * (1 + interestRate);
-                              installmentValue = displayTotal / num;
+
+                          const options = [];
+                          const hasInstallmentCoupon = appliedCouponRef && formData.paymentMethod === 'installment';
+
+                          for (let num = 1; num <= maxAllowedInstallments; num++) {
+                            let optionTotal = total;
+                            let label = '';
+
+                            // Only apply interest for this option if num > 6 and no coupon
+                            if (num > 6 && !hasInstallmentCoupon) {
+                              optionTotal = total * 1.02;
+                              label = ` (+2% ${t("checkout.interest")})`;
                             }
 
-                            return (
+                            const installmentValue = optionTotal / num;
+
+                            options.push(
                               <option key={num} value={num}>
-                                {num}x {t("checkout.installments")} - R${installmentValue.toFixed(2)} ({t("checkout.installmentTotal")}: R${displayTotal.toFixed(2)})
-                                {num > 6 && ` (+2% ${t("checkout.interest")})`}
+                                {num}x {t("checkout.installments")} - R${installmentValue.toFixed(2)} ({t("checkout.installmentTotal")}: R${optionTotal.toFixed(2)}){label}
                               </option>
                             );
-                          });
+                          }
+
+                          return options;
                         })()}
                       </select>
                       <p className="text-sm text-gray-500">
@@ -1275,6 +1286,31 @@ const CheckoutPage: React.FC = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">{t("checkout.summary.installmentFee")}</span>
                 <span className="text-gray-900 font-medium">+R${installmentFee.toFixed(2)}</span>
+              </div>
+            )}
+
+            {/* Installment Coupon Info */}
+            {appliedCouponRef && formData.paymentMethod === 'installment' && (
+              <div className="flex justify-between items-center text-sm bg-blue-50 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-600">{t("checkout.summary.couponApplied")}</span>
+                  <span className="text-blue-800 font-medium bg-blue-100 rounded px-2 py-1 text-xs">
+                    {formData.couponCode} - {t("checkout.installments")} {formData.installments}x
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-blue-600 font-medium">{t("checkout.installmentsInfo")}</span>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="text-blue-600 hover:text-blue-800 p-1.5 rounded-full hover:bg-blue-100 transition-colors"
+                    title={t("checkout.removeCoupon")}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             )}
 

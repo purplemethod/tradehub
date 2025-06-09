@@ -1008,8 +1008,7 @@ const EditProductPage: React.FC = () => {
             </div>
 
             {/* Video Preview */}
-            {product?.imageMetadataRef?.find((img) => img.type === "youtube")
-              ?.videoId && (
+            {product?.imageMetadataRef && product.imageMetadataRef.find((img) => img?.type === "youtube")?.videoId && (
               <div className="mt-4">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">
                   {t("products.videoPreview")}
@@ -1018,7 +1017,7 @@ const EditProductPage: React.FC = () => {
                   <iframe
                     src={`https://www.youtube.com/embed/${
                       product.imageMetadataRef.find(
-                        (img) => img.type === "youtube"
+                        (img) => img?.type === "youtube"
                       )?.videoId
                     }?autoplay=0&rel=0&modestbranding=1`}
                     title="YouTube video player"
