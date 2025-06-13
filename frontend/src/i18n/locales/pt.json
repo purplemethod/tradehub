@@ -295,7 +295,8 @@
     "boards": "Placas",
     "cards": "Cartões",
     "chips": "Chips",
-    "circuits": "Circuitos"
+    "circuits": "Circuitos",
+    "linkCopied": "Link copiado!"
   },
   "auth": {
     "login": "Entrar",
@@ -742,7 +743,8 @@
       "paid": "Pago",
       "shipped": "Enviado",
       "delivered": "Entregue",
-      "cancelled": "Cancelado"
+      "cancelled": "Cancelado",
+      "completed": "Concluído"
     },
     "paymentMethod": "Forma de Pagamento",
     "installmentInfo": "Parcela {{current}} de {{total}} - R${{value}} por parcela. Próximo pagamento: {{next}}",

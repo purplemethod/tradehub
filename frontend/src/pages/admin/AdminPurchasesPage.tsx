@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useTranslation } from "react-i18next";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, doc, updateDoc } from "firebase/firestore";
 import { firestoreDB } from "../utils/FirebaseConfig";
 import UserContext from "../context/UserContext";
 import { useNotification } from "../context/NotificationContext";
@@ -71,6 +71,21 @@ const AdminPurchasesPage: React.FC = () => {
     return '-';
   };
 
+  const handleConfirmPayment = async (orderId: string) => {
+    try {
+      const orderRef = doc(firestoreDB, "orders", orderId);
+      await updateDoc(orderRef, { status: "completed" });
+      showNotification(t("orders.paymentConfirmed"), "success");
+      setOrders(prev =>
+        prev.map(order =>
+          order.id === orderId ? { ...order, status: "completed" } : order
+        )
+      );
+    } catch (error) {
+      showNotification(t("orders.paymentConfirmError"), "error");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -129,6 +144,14 @@ const AdminPurchasesPage: React.FC = () => {
                     }`}>
                       {t(`orders.status.${order.status}`)}
                     </span>
+                    {order.status !== 'completed' && (
+                      <button
+                        className="ml-2 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+                        onClick={() => handleConfirmPayment(order.id)}
+                      >
+                        {t("orders.confirmPayment")}
+                      </button>
+                    )}
                   </td>
                   <td className="py-3 px-4">
                     {formatDate(order.createdAt)}

@@ -296,7 +296,8 @@
     "boards": "Boards",
     "cards": "Cards",
     "chips": "Chips",
-    "circuits": "Circuits"
+    "circuits": "Circuits",
+    "linkCopied": "Link copied!"
   },
   "auth": {
     "login": "Login",
@@ -738,7 +739,8 @@
       "paid": "Paid",
       "shipped": "Shipped",
       "delivered": "Delivered",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "completed": "Completed"
     },
     "paymentMethod": "Payment Method",
     "installmentInfo": "Installment {{current}} of {{total}} - ${{value}} per installment. Next payment: {{next}}",

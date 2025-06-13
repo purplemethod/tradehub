@@ -508,6 +508,30 @@ const SellingProductPage: React.FC = () => {
                         />
                       </svg>
                     </button>
+                    <button
+                      onClick={async () => {
+                        const shareUrl = `${window.location.origin}/#/product/${product.id}`;
+                        if (navigator.share) {
+                          try {
+                            await navigator.share({
+                              title: product.name,
+                              url: shareUrl,
+                            });
+                          } catch {
+                            // User cancelled or error
+                          }
+                        } else {
+                          await navigator.clipboard.writeText(shareUrl);
+                          showNotification(t("products.linkCopied"), "success");
+                        }
+                      }}
+                      className="p-2 rounded-full bg-gray-200 hover:bg-gray-300"
+                      title={t("products.share")}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 8a3 3 0 11-6 0 3 3 0 016 0zm6 8a3 3 0 11-6 0 3 3 0 016 0zm-6 0a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </div>
