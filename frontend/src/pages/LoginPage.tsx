@@ -91,7 +91,7 @@ const LoginPage: React.FC = () => {
         console.error("Error updating user document:", error);
       }
       showNotification(t("auth.notifications.loginSuccess"), "success");
-      navigate("/home", { replace: true });
+      navigate("home", { replace: true });
     } catch (error) {
       showNotification(t("auth.notifications.loginError" + error), "error");
       console.error(error);
@@ -124,7 +124,7 @@ const LoginPage: React.FC = () => {
         // Don't set user to null here, as the auth state is still valid
       }
       showNotification(t("auth.notifications.loginSuccess"), "success");
-      navigate("/home", { replace: true });
+      navigate("home", { replace: true });
     } catch (error) {
       showNotification(t("auth.notifications.loginError" + error), "error");
       console.error(error);

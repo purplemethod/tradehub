@@ -35,9 +35,9 @@ const AppContent: React.FC = () => {
       <NavBar />
       <main className="container mx-auto px-4 py-8">
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="login" element={<LoginPage />} />
           <Route
-            path="/new-product"
+            path="new-product"
             element={
               <AuthGuard requiredPermission={canManageProducts}>
                 <NewProductPage />
@@ -45,7 +45,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/home"
+            path="home"
             element={
               <AuthGuard requiredPermission={true}>
                 <SellingProductPage />
@@ -53,7 +53,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/product/:productId"
+            path="product/:productId"
             element={
               <AuthGuard requiredPermission={true}>
                 <ProductDetailPage />
@@ -61,7 +61,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/edit-product/:productId"
+            path="edit-product/:productId"
             element={
               <AuthGuard requiredPermission={isAdmin || isSeller}>
                 <EditProductPage />
@@ -69,7 +69,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/my-products"
+            path="my-products"
             element={
               <AuthGuard requiredPermission={true}>
                 <MyProductsPage />
@@ -77,7 +77,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/my-favorites"
+            path="my-favorites"
             element={
               <AuthGuard requiredPermission={true}>
                 <MyFavoritesPage />
@@ -85,7 +85,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/checkout"
+            path="checkout"
             element={
               <AuthGuard requiredPermission={true}>
                 <CheckoutPage />
@@ -93,7 +93,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/profile"
+            path="profile"
             element={
               <AuthGuard requiredPermission={true}>
                 <EditProfilePage />
@@ -101,16 +101,16 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/my-purchases"
+            path="my-purchases"
             element={
               <AuthGuard requiredPermission={true}>
                 <MyPurchasesPage />
               </AuthGuard>
             }
           />
-          <Route path="/" element={<Navigate to="/home" />} />
+          <Route path="/" element={<Navigate to="home" />} />
           <Route
-            path="/admin/coupons"
+            path="admin/coupons"
             element={
               <AuthGuard requiredPermission={isAdmin}>
                 <CouponManagementPage />
@@ -118,7 +118,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/admin/installment-payments"
+            path="admin/installment-payments"
             element={
               <AuthGuard requiredPermission={isAdmin || isSeller}>
                 <InstallmentPaymentPage />
@@ -150,7 +150,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/admin/purchases"
+            path="admin/purchases"
             element={
               <AuthGuard requiredPermission={isAdmin}>
                 <AdminPurchasesPage />

@@ -91,7 +91,7 @@ const MyFavoritesPage: React.FC = () => {
         <div className="text-center py-8">
           <p className="text-gray-600 mb-4">{t('favorites.empty')}</p>
           <Link
-            to="/home"
+            to="home"
             className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors"
           >
             {t('favorites.browseProducts')}

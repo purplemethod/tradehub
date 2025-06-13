@@ -272,9 +272,9 @@ const NavBar: React.FC = () => {
   const { t } = useTranslation();
 
   const navigation: NavigationItem[] = [
-    { name: "nav.sellingProducts", href: "/home", current: false },
-    { name: "nav.myFavorites", href: "/my-favorites", current: false },
-    { name: "nav.myPurchases", href: "/my-purchases", current: false },
+    { name: "nav.sellingProducts", href: "home", current: false },
+    { name: "nav.myFavorites", href: "my-favorites", current: false },
+    { name: "nav.myPurchases", href: "my-purchases", current: false },
     ...((user?.role && isAdmin(user.role)) ||
     (user?.role && isSeller(user.role))
       ? [
@@ -286,31 +286,31 @@ const NavBar: React.FC = () => {
               ((user?.role && isAdmin(user.role)) ||
                 (user?.role && isSeller(user.role))) && {
                 name: "nav.myProducts",
-                href: "/my-products",
+                href: "my-products",
                 current: false,
               },
               ((user?.role && isAdmin(user.role)) ||
                 (user?.role && isSeller(user.role))) && {
                 name: "orders.installmentPayments",
-                href: "/admin/installment-payments",
+                href: "admin/installment-payments",
                 current: false,
               },
               user?.role &&
                 isAdmin(user.role) && {
                   name: "admin.coupons.title",
-                  href: "/admin/coupons",
+                  href: "admin/coupons",
                   current: false,
                 },
               user?.role &&
                 isAdmin(user.role) && {
                   name: "admin.userManagement.title",
-                  href: "/admin/users",
+                  href: "admin/users",
                   current: false,
                 },
               user?.role &&
                 isAdmin(user.role) && {
                   name: "admin.purchases.title",
-                  href: "/admin/purchases",
+                  href: "admin/purchases",
                   current: false,
                 },
             ].filter((item): item is NavigationItem => Boolean(item)),
@@ -322,7 +322,7 @@ const NavBar: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login", { replace: true });
+      navigate("login", { replace: true });
     } catch (error) {
       console.error("Error logging out:", error);
     }
@@ -351,7 +351,7 @@ const NavBar: React.FC = () => {
               </div>
               <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex shrink-0 items-center">
-                  <Link to="/home" className="flex items-center">
+                  <Link to="home" className="flex items-center">
                     <img
                       alt="TradeHub Platform"
                       src={logo}
@@ -464,7 +464,7 @@ const NavBar: React.FC = () => {
                   >
                     <MenuItem>
                       <Link
-                        to="/profile"
+                        to="profile"
                         className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                       >
                         {t("profile.title")}
@@ -473,7 +473,7 @@ const NavBar: React.FC = () => {
                     <div className="border-t border-gray-200 my-1" />
                     <MenuItem>
                       <Link
-                        to="/my-favorites"
+                        to="my-favorites"
                         className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                       >
                         {t("products.myFavorites")}
@@ -481,7 +481,7 @@ const NavBar: React.FC = () => {
                     </MenuItem>
                     <MenuItem>
                       <Link
-                        to="/my-purchases"
+                        to="my-purchases"
                         className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                       >
                         {t("orders.myPurchases")}
@@ -497,7 +497,7 @@ const NavBar: React.FC = () => {
                           <>
                             <MenuItem>
                               <Link
-                                to="/admin/coupons"
+                                to="admin/coupons"
                                 className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                               >
                                 {t("admin.coupons.title")}
@@ -505,7 +505,7 @@ const NavBar: React.FC = () => {
                             </MenuItem>
                             <MenuItem>
                               <Link
-                                to="/admin/users"
+                                to="admin/users"
                                 className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                               >
                                 {t("admin.userManagement.title")}
@@ -513,7 +513,7 @@ const NavBar: React.FC = () => {
                             </MenuItem>
                             <MenuItem>
                               <Link
-                                to="/admin/purchases"
+                                to="admin/purchases"
                                 className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                               >
                                 {t("admin.purchases.title")}
@@ -523,7 +523,7 @@ const NavBar: React.FC = () => {
                         )}
                         <MenuItem>
                           <Link
-                            to="/my-products"
+                            to="my-products"
                             className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                           >
                             {t("products.myProducts")}
@@ -531,7 +531,7 @@ const NavBar: React.FC = () => {
                         </MenuItem>
                         <MenuItem>
                           <Link
-                            to="/admin/installment-payments"
+                            to="admin/installment-payments"
                             className="block pl-6 pr-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                           >
                             {t("orders.installmentPayments")}
