@@ -49,7 +49,7 @@ const ProductDetailPage: React.FC = () => {
           setProduct({ id: productSnap.id, ...productSnap.data() } as Product);
         } else {
           showNotification(t("products.errors.notFound"), "error");
-          navigate("home");
+          navigate("/home", { replace: true });
         }
       } catch (error) {
         console.error("Error fetching product:", error);

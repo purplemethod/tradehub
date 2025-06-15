@@ -17,7 +17,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   const { showNotification } = useNotification();
   useEffect(() => {
     if (!userLoading && !user) {
-      navigate("login", { replace: true });
+      navigate("/login", { replace: true });
     }
   }, [user, userLoading, navigate]);
 
@@ -35,7 +35,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   if (!requiredPermission) {
     showNotification("This page is not available to you", "error");
-    navigate("", { replace: true });
+    navigate("/home", { replace: true });
     return null;
   }
 
