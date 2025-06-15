@@ -23,13 +23,13 @@ const ManageUserPage: React.FC = () => {
     const fetchUser = async () => {
       if (!userContext?.user || userContext.user.role !== "ADMIN") {
         showNotification(t("auth.permissionDenied"), "error");
-        navigate("/");
+        navigate("");
         return;
       }
 
       if (!userId) {
         showNotification(t("admin.userManagement.selectUserError"), "warning");
-        navigate("/admin/users"); // Redirect to user list if no user ID
+        navigate("admin/users"); // Redirect to user list if no user ID
         return;
       }
 
@@ -41,7 +41,7 @@ const ManageUserPage: React.FC = () => {
           setUserProfile({ ...userDoc.data() as UserProfile });
         } else {
           showNotification(t("admin.userManagement.userNotFound"), "error");
-          navigate("/admin/users");
+          navigate("admin/users");
         }
       } catch (error) {
         console.error("Error fetching user:", error);
@@ -96,7 +96,7 @@ const ManageUserPage: React.FC = () => {
       const userRef = doc(firestoreDB, "users", userProfile.id);
       await deleteDoc(userRef);
       showNotification(t("admin.userManagement.deleteSuccess"), "success");
-      navigate("/admin/users");
+      navigate("admin/users");
     } catch (error) {
       console.error("Error deleting user:", error);
       showNotification(t("admin.userManagement.deleteError"), "error");

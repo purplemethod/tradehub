@@ -320,7 +320,7 @@ const CheckoutPage: React.FC = () => {
         if (productContext?.refreshProducts) {
           productContext.refreshProducts();
         }
-        navigate("/my-purchases");
+        navigate("my-purchases");
       }, 3000);
 
       return pixData;
@@ -591,7 +591,7 @@ const CheckoutPage: React.FC = () => {
       if (productContext?.refreshProducts) {
         productContext.refreshProducts();
       }
-      navigate("/my-purchases");
+      navigate("my-purchases");
             }
 
     return () => {

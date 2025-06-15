@@ -19,7 +19,7 @@ const AdminPurchasesPage: React.FC = () => {
     const fetchOrders = async () => {
       if (!userContext?.user || userContext.user.role !== "ADMIN") {
         showNotification(t("auth.permissionDenied"), "error");
-        navigate("/");
+        navigate("");
         return;
       }
 

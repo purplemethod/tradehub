@@ -99,13 +99,13 @@ const OrderConfirmationPage: React.FC = () => {
 
         <div className="mt-8 flex justify-center space-x-4">
           <button
-            onClick={() => navigate("/products")}
+            onClick={() => navigate("products")}
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             {t('orderConfirmation.continueShopping')}
           </button>
           <button
-            onClick={() => navigate("/orders")}
+            onClick={() => navigate("orders")}
             className="px-6 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           >
             {t('orderConfirmation.viewOrders')}

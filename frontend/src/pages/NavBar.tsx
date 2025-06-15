@@ -75,7 +75,7 @@ const BasketDrawer: React.FC<BasketDrawerProps> = ({
       return;
     }
     onClose();
-    navigate("/checkout");
+    navigate("checkout");
   };
 
   return (

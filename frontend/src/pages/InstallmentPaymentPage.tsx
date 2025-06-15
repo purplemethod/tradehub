@@ -128,7 +128,7 @@ const InstallmentPaymentPage: React.FC = () => {
             } as Order);
           } else {
             showNotification(t("orders.notFound"), "error");
-            navigate("/my-purchases");
+            navigate("my-purchases");
           }
         } else {
           const ordersRef = collection(firestoreDB, "orders");

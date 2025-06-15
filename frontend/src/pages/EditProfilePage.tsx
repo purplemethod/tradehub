@@ -33,7 +33,7 @@ const EditProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (!context?.user) {
-      navigate("/login", { replace: true });
+      navigate("login", { replace: true });
       return;
     }
 
@@ -49,7 +49,7 @@ const EditProfilePage: React.FC = () => {
       }
 
       if (!userLoading && !user) {
-        navigate("/login");
+        navigate("login");
         return;
       }
       try {

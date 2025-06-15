@@ -162,7 +162,7 @@ const EditProductPage: React.FC = () => {
       setIsLoading(false);
     } else {
       showNotification(t("products.errors.productNotFound"), "error");
-      navigate("/my-products");
+      navigate("my-products");
     }
   }, [productId, products, productsLoading, navigate, showNotification, t]);
 
@@ -466,7 +466,7 @@ const EditProductPage: React.FC = () => {
       await refreshProducts();
 
       showNotification(t("products.notifications.updateSuccess"), "success");
-      navigate("/my-products", { replace: true });
+      navigate("my-products", { replace: true });
     } catch (error) {
       console.error("Error updating product:", error);
       showNotification(t("products.notifications.updateError"), "error");

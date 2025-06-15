@@ -92,7 +92,7 @@ const MyProductsPage: React.FC = () => {
     }
     // Only redirect if user context is done loading and there's no user
     if (!userLoading && !user) {
-      navigate("/login", { replace: true });
+      navigate("login", { replace: true });
       return;
     }
     if (productsLoading) {
@@ -231,7 +231,7 @@ const MyProductsPage: React.FC = () => {
   };
 
   const handleCreate = () => {
-    navigate("/new-product");
+    navigate("new-product");
   };
 
   const handleNextImage = (product: Product) => {

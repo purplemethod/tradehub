@@ -24,7 +24,7 @@ const UserListPage: React.FC = () => {
       if (!userContext?.user || userContext.user.role !== "ADMIN") {
         // Redirect or show error if not admin
         showNotification(t("auth.permissionDenied"), "error");
-        navigate("/"); // Redirect to home or login
+        navigate("home"); // Redirect to home or login
         return;
       }
 

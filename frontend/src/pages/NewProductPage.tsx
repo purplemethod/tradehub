@@ -523,7 +523,7 @@ const NewProductPage: React.FC = () => {
 
       showNotification(t("products.notifications.createSuccess"), "success");
       await refreshProducts();
-      navigate("/my-products", { replace: true });
+      navigate("my-products", { replace: true });
     } catch (error) {
       console.error("Error creating product:", error);
       showNotification(t("products.notifications.createError"), "error");
