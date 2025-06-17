@@ -75,7 +75,7 @@ const BasketDrawer: React.FC<BasketDrawerProps> = ({
       return;
     }
     onClose();
-    navigate("checkout");
+    navigate("/checkout");
   };
 
   return (
@@ -322,7 +322,7 @@ const NavBar: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("login", { replace: true });
+      navigate("/login", { replace: true });
     } catch (error) {
       console.error("Error logging out:", error);
     }
