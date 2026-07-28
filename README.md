@@ -164,6 +164,40 @@ src/
 └── main.tsx        # Application entry point
 ```
 
+## 🗄️ Histórico de Deploy / Como Repor o Site no Ar
+
+> **Nota (2026-07-28):** o site estava hospedado em `nitos.purplemethod.pt` (Hostinger, alojamento partilhado, pasta `~/domains/nitos.purplemethod.pt/public_html`). O domínio foi **apagado do Hostinger para liberar espaço**. Nada foi perdido — foi verificado antes de apagar:
+>
+> - O código-fonte estava 100% sincronizado com este repositório (commit `4ceb7f7`), sem modificações locais no servidor.
+> - Os arquivos de build implantados (`index.html`, `web.config`, `_redirects`) tinham checksums MD5 idênticos aos de `frontend/dist/`.
+> - Os dados da aplicação (usuários, produtos, compras) vivem no **Firebase/Firestore**, não no Hostinger — apagar o domínio não afeta os dados. As regras estão em `frontend/firestore.rules`.
+> - O `.htaccess` implantado era uma versão simplificada; o `frontend/public/.htaccess` deste repositório é um superconjunto (mesmo rewrite de SPA + CORS + cache + `-Indexes`), então republicar a partir do git resulta em configuração igual ou melhor.
+
+### Passos para republicar
+
+1. **Criar o subdomínio** `nitos.purplemethod.pt` no hPanel do Hostinger (Websites → Add Website / Subdomain).
+2. **Build local:**
+   ```bash
+   cd frontend
+   npm install   # ou pnpm install
+   npm run build # gera frontend/dist/
+   ```
+3. **Publicar:** copiar o conteúdo de `frontend/dist/` para `~/domains/nitos.purplemethod.pt/public_html/` (via File Manager, FTP ou `scp`). Alternativa usada anteriormente: clonar este repositório dentro do `public_html` e copiar o `dist/` para a raiz.
+4. **Verificar** que `.htaccess` foi copiado junto (arquivos ocultos!) — sem ele o roteamento da SPA (React Router) quebra com 404 em refresh.
+
+### Acesso SSH ao Hostinger
+
+Host, porta e usuário estão em `frontend/.env` (**não versionado** — mantenha uma cópia segura fora do repositório, ex. gerenciador de senhas). Conexão por senha; se a chave SSH local pedir passphrase e travar, forçar autenticação por senha:
+
+```bash
+ssh -o PubkeyAuthentication=no -o PreferredAuthentications=password -p <SSH_PORT> <SSH_USER>@<SSH_HOST>
+```
+
+### Avisos
+
+- Ao apagar/recriar o domínio, conferir se há **cron jobs** no hPanel apontando para caminhos do domínio e removê-los/recriá-los.
+- Nunca commitar o `frontend/.env` (contém credenciais SSH e token da API do Hostinger).
+
 ## 🤝 Contributing
 
 1. Fork the repository
